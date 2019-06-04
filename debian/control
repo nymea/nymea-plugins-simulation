@@ -1,0 +1,21 @@
+Source: nymea-plugins-simulation
+Section: utils
+Priority: options
+Maintainer: Michael Zanetti <michael.zanetti@guh.io>
+Build-depends: debhelper (>= 0.0.0),
+               libnymea1-dev,
+               pkg-config,
+               python:any,
+               qtbase5-dev,
+Standards-Version: 3.9.3
+
+
+Package: nymea-plugin-celsios
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         nymea-plugins-translations,
+Description: nymea.io simulation plugin for the Celsi°s experience
+ This plugin simulates heating pump systems with a heating unit and a
+ ventilation unit and works with the Celsi°s experience in nymea:app
