@@ -1,3 +1,6 @@
-nymea-plugins-simulation (0.1) UNRELEASED; urgency=medium
+nymea-plugins-simulation (0.1) xenial; urgency=medium
 
- -- Jenkins <jenkins@nymea.io>  Thu, 23 May 2019 17:30:23 +0200
+  [ Michael Zanetti ]
+  * Celsi°s: Add a simulation plugin for the Celsi°s experience
+
+ -- Jenkins <jenkins@nymea.io>  Wed, 19 Jun 2019 23:52:43 +0200
