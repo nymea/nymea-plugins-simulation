@@ -1,3 +1,10 @@
+nymea-plugins-simulation (0.2) xenial; urgency=medium
+
+  [ Michael Zanetti ]
+  * Update to new api
+
+ -- Jenkins <jenkins@nymea.io>  Tue, 03 Sep 2019 01:27:33 +0200
+
 nymea-plugins-simulation (0.1) xenial; urgency=medium
 
   [ Michael Zanetti ]
