@@ -21,9 +21,7 @@
 #ifndef DEVICEPLUGINCELSIOS_H
 #define DEVICEPLUGINCELSIOS_H
 
-#include "plugin/deviceplugin.h"
-#include "devicemanager.h"
-
+#include "devices/deviceplugin.h"
 
 class PluginTimer;
 
@@ -39,9 +37,9 @@ public:
     ~DevicePluginCelsios() = default;
 
     void startMonitoringAutoDevices() override;
-    DeviceManager::DeviceSetupStatus setupDevice(Device *device) override;
+    Device::DeviceSetupStatus setupDevice(Device *device) override;
     void deviceRemoved(Device *device) override;
-    DeviceManager::DeviceError executeAction(Device *device, const Action &action) override;
+    Device::DeviceError executeAction(Device *device, const Action &action) override;
 
 private:
     PluginTimer *m_timer = nullptr;
