@@ -40,7 +40,7 @@ void DevicePluginCelsios::startMonitoringAutoDevices()
     }
 }
 
-DeviceManager::DeviceSetupStatus DevicePluginCelsios::setupDevice(Device *device)
+Device::DeviceSetupStatus DevicePluginCelsios::setupDevice(Device *device)
 {
     if (device->deviceClassId() == x2wpDeviceClassId) {
         device->setStateValue(x2wpConnectedStateTypeId, true);
@@ -95,7 +95,7 @@ DeviceManager::DeviceSetupStatus DevicePluginCelsios::setupDevice(Device *device
             }
         });
     }
-    return DeviceManager::DeviceSetupStatusSuccess;
+    return Device::DeviceSetupStatusSuccess;
 }
 
 
@@ -108,7 +108,7 @@ void DevicePluginCelsios::deviceRemoved(Device *device)
     }
 }
 
-DeviceManager::DeviceError DevicePluginCelsios::executeAction(Device *device, const Action &action)
+Device::DeviceError DevicePluginCelsios::executeAction(Device *device, const Action &action)
 {
     if (action.actionTypeId() == x2luVentilationModeActionTypeId) {
         QString mode = action.param(x2luVentilationModeActionVentilationModeParamTypeId).value().toString();
@@ -134,5 +134,5 @@ DeviceManager::DeviceError DevicePluginCelsios::executeAction(Device *device, co
     } else if (action.actionTypeId() == x2wpTargetWaterTemperatureActionTypeId) {
         device->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetWaterTemperatureActionTargetWaterTemperatureParamTypeId).value());
     }
-    return DeviceManager::DeviceErrorNoError;
+    return Device::DeviceErrorNoError;
 }
