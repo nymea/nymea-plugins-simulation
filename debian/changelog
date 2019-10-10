@@ -1,3 +1,10 @@
+nymea-plugins-simulation (0.3) xenial; urgency=medium
+
+  [ Michael Zanetti ]
+  * update to new devicemanager api
+
+ -- Jenkins <jenkins@nymea.io>  Thu, 10 Oct 2019 22:56:45 +0200
+
 nymea-plugins-simulation (0.2) xenial; urgency=medium
 
   [ Michael Zanetti ]
