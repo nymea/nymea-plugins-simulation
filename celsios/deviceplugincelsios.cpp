@@ -33,15 +33,17 @@ void DevicePluginCelsios::startMonitoringAutoDevices()
 {
     if (myDevices().isEmpty()) {
         DeviceDescriptor vu(x2luDeviceClassId, "Celsi°s ventilation unit");
-        emit autoDevicesAppeared(x2luDeviceClassId, QList<DeviceDescriptor>() << vu);
+        emit autoDevicesAppeared({vu});
 
         DeviceDescriptor hu(x2wpDeviceClassId, "Celsi°s heating unit");
-        emit autoDevicesAppeared(x2wpDeviceClassId, QList<DeviceDescriptor>() << hu);
+        emit autoDevicesAppeared({hu});
     }
 }
 
-Device::DeviceSetupStatus DevicePluginCelsios::setupDevice(Device *device)
+void DevicePluginCelsios::setupDevice(DeviceSetupInfo *info)
 {
+    Device *device = info->device();
+
     if (device->deviceClassId() == x2wpDeviceClassId) {
         device->setStateValue(x2wpConnectedStateTypeId, true);
         device->setStateValue(x2wpPowerStateTypeId, true);
@@ -95,7 +97,7 @@ Device::DeviceSetupStatus DevicePluginCelsios::setupDevice(Device *device)
             }
         });
     }
-    return Device::DeviceSetupStatusSuccess;
+    info->finish(Device::DeviceErrorNoError);
 }
 
 
@@ -108,8 +110,11 @@ void DevicePluginCelsios::deviceRemoved(Device *device)
     }
 }
 
-Device::DeviceError DevicePluginCelsios::executeAction(Device *device, const Action &action)
+void DevicePluginCelsios::executeAction(DeviceActionInfo *info)
 {
+    Device *device = info->device();
+    Action action = info->action();
+
     if (action.actionTypeId() == x2luVentilationModeActionTypeId) {
         QString mode = action.param(x2luVentilationModeActionVentilationModeParamTypeId).value().toString();
         qCDebug(dcCelsios()) << "ExecuteAction" << action.actionTypeId() << mode;
@@ -134,5 +139,5 @@ Device::DeviceError DevicePluginCelsios::executeAction(Device *device, const Act
     } else if (action.actionTypeId() == x2wpTargetWaterTemperatureActionTypeId) {
         device->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetWaterTemperatureActionTargetWaterTemperatureParamTypeId).value());
     }
-    return Device::DeviceErrorNoError;
+    info->finish(Device::DeviceErrorNoError);
 }
