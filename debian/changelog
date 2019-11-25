@@ -1,3 +1,10 @@
+nymea-plugins-simulation (0.4) xenial; urgency=medium
+
+  [ Michael Zanetti ]
+  * Update dependency information
+
+ -- Jenkins <jenkins@nymea.io>  Mon, 25 Nov 2019 23:32:39 +0100
+
 nymea-plugins-simulation (0.3) xenial; urgency=medium
 
   [ Michael Zanetti ]
