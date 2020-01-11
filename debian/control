@@ -6,6 +6,7 @@ Build-depends: debhelper (>= 0.0.0),
                libnymea1-dev (>= 0.16),
                pkg-config,
                python:any,
+               qt5-default,
                qtbase5-dev,
                nymea-dev-tools:native,
 Standards-Version: 3.9.3
