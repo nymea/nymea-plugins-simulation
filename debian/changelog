@@ -1,3 +1,11 @@
+nymea-plugins-simulation (0.6) xenial; urgency=medium
+
+  [ Michael Zanetti ]
+  * Fix building in sbuild
+  * Update copyright
+
+ -- Jenkins <jenkins@nymea.io>  Thu, 23 Jan 2020 13:41:28 +0100
+
 nymea-plugins-simulation (0.5) xenial; urgency=medium
 
   [ Michael Zanetti ]
