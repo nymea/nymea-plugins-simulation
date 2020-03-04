@@ -28,31 +28,31 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef DEVICEPLUGINCELSIOS_H
-#define DEVICEPLUGINCELSIOS_H
+#ifndef INTEGRATIONPLUGINCELSIOS_H
+#define INTEGRATIONPLUGINCELSIOS__H
 
-#include "devices/deviceplugin.h"
+#include "integrations/integrationplugin.h"
 
 class PluginTimer;
 
-class DevicePluginCelsios: public DevicePlugin
+class ThingPluginCelsios: public IntegrationPlugin
 {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "io.nymea.DevicePlugin" FILE "deviceplugincelsios.json")
-    Q_INTERFACES(DevicePlugin)
+    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationplugincelsios.json")
+    Q_INTERFACES(IntegrationPlugin)
 
 public:
-    explicit DevicePluginCelsios(QObject *parent = nullptr);
-    ~DevicePluginCelsios() = default;
+    explicit ThingPluginCelsios(QObject *parent = nullptr);
+    ~ThingPluginCelsios() = default;
 
-    void startMonitoringAutoDevices() override;
-    void setupDevice(DeviceSetupInfo *info) override;
-    void deviceRemoved(Device *device) override;
-    void executeAction(DeviceActionInfo *info) override;
+    void startMonitoringAutoThings() override;
+    void setupThing(ThingSetupInfo *info) override;
+    void thingRemoved(Thing *thing) override;
+    void executeAction(ThingActionInfo *info) override;
 
 private:
     PluginTimer *m_timer = nullptr;
 };
 
-#endif // DEVICEPLUGINCELSIOS_H
+#endif // INTEGRATIONPLUGINCELSIOS__H
