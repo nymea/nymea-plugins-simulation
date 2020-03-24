@@ -28,43 +28,41 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "deviceplugincelsios.h"
+#include "integrationplugincelsios.h"
 #include "plugininfo.h"
 
 #include "plugintimer.h"
 
-DevicePluginCelsios::DevicePluginCelsios(QObject *parent): DevicePlugin (parent)
+ThingPluginCelsios::ThingPluginCelsios(QObject *parent): IntegrationPlugin (parent)
 {
 
 }
 
-void DevicePluginCelsios::startMonitoringAutoDevices()
+void ThingPluginCelsios::startMonitoringAutoThings()
 {
-    if (myDevices().isEmpty()) {
-        DeviceDescriptor vu(x2luDeviceClassId, "Celsi°s ventilation unit");
-        emit autoDevicesAppeared({vu});
-
-        DeviceDescriptor hu(x2wpDeviceClassId, "Celsi°s heating unit");
-        emit autoDevicesAppeared({hu});
+    if (myThings().isEmpty()) {
+        ThingDescriptor vu(x2luThingClassId, "Celsi°s ventilation unit");
+        ThingDescriptor hu(x2wpThingClassId, "Celsi°s heating unit");
+        emit autoThingsAppeared({hu, vu});
     }
 }
 
-void DevicePluginCelsios::setupDevice(DeviceSetupInfo *info)
+void ThingPluginCelsios::setupThing(ThingSetupInfo *info)
 {
-    Device *device = info->device();
+    Thing *thing = info->thing();
 
-    if (device->deviceClassId() == x2wpDeviceClassId) {
-        device->setStateValue(x2wpConnectedStateTypeId, true);
-        device->setStateValue(x2wpPowerStateTypeId, true);
+    if (thing->thingClassId() == x2wpThingClassId) {
+        thing->setStateValue(x2wpConnectedStateTypeId, true);
+        thing->setStateValue(x2wpPowerStateTypeId, true);
 
-    } else if (device->deviceClassId() == x2luDeviceClassId) {
-        device->setStateValue(x2luConnectedStateTypeId, true);
+    } else if (thing->thingClassId() == x2luThingClassId) {
+        thing->setStateValue(x2luConnectedStateTypeId, true);
     }
 
     if (!m_timer) {
         m_timer = hardwareManager()->pluginTimerManager()->registerTimer(60);
         connect(m_timer, &PluginTimer::timeout, this, [this](){
-            foreach (Device *d, myDevices().filterByDeviceClassId(x2wpDeviceClassId)) {
+            foreach (Thing *d, myThings().filterByThingClassId(x2wpThingClassId)) {
                 double targetValue = d->stateValue(x2wpTargetTemperatureStateTypeId).toDouble();
                 double currentValue = d->stateValue(x2wpTemperatureStateTypeId).toDouble();
                 int r = qrand();
@@ -79,7 +77,7 @@ void DevicePluginCelsios::setupDevice(DeviceSetupInfo *info)
                     d->setStateValue(x2wpTemperatureStateTypeId, currentValue - delta);
                 }
             }
-            foreach (Device *d, myDevices().filterByDeviceClassId(x2luDeviceClassId)) {
+            foreach (Thing *d, myThings().filterByThingClassId(x2luThingClassId)) {
                 int ventilationLevel = d->stateValue(x2luActiveVentilationLevelStateTypeId).toInt();
                 double targetValue = ventilationLevel > 0 ? 350 : 1500;
                 double currentValue = d->stateValue(x2luCo2StateTypeId).toDouble();
@@ -106,47 +104,47 @@ void DevicePluginCelsios::setupDevice(DeviceSetupInfo *info)
             }
         });
     }
-    info->finish(Device::DeviceErrorNoError);
+    info->finish(Thing::ThingErrorNoError);
 }
 
 
-void DevicePluginCelsios::deviceRemoved(Device *device)
+void ThingPluginCelsios::thingRemoved(Thing *thing)
 {
-    Q_UNUSED(device)
-    if (myDevices().isEmpty()) {
+    Q_UNUSED(thing)
+    if (myThings().isEmpty()) {
         hardwareManager()->pluginTimerManager()->unregisterTimer(m_timer);
         m_timer = nullptr;
     }
 }
 
-void DevicePluginCelsios::executeAction(DeviceActionInfo *info)
+void ThingPluginCelsios::executeAction(ThingActionInfo *info)
 {
-    Device *device = info->device();
+    Thing *thing = info->thing();
     Action action = info->action();
 
     if (action.actionTypeId() == x2luVentilationModeActionTypeId) {
         QString mode = action.param(x2luVentilationModeActionVentilationModeParamTypeId).value().toString();
         qCDebug(dcCelsios()) << "ExecuteAction" << action.actionTypeId() << mode;
-        device->setStateValue(x2luVentilationModeStateTypeId, mode);
+        thing->setStateValue(x2luVentilationModeStateTypeId, mode);
         if (mode == "Manual level 0") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 0);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 0);
         } else if (mode == "Manual level 1") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
         } else if (mode == "Manual level 2") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 2);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 2);
         } else if (mode == "Manual level 3") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
         } else if (mode == "Automatic") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
         } else if (mode == "Party") {
-            device->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
+            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
         }
     } else if (action.actionTypeId() == x2wpPowerActionTypeId) {
-        device->setStateValue(x2wpPowerStateTypeId, action.param(x2wpPowerActionPowerParamTypeId).value());
+        thing->setStateValue(x2wpPowerStateTypeId, action.param(x2wpPowerActionPowerParamTypeId).value());
     } else if (action.actionTypeId() == x2wpTargetTemperatureActionTypeId) {
-        device->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetTemperatureActionTargetTemperatureParamTypeId).value());
+        thing->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetTemperatureActionTargetTemperatureParamTypeId).value());
     } else if (action.actionTypeId() == x2wpTargetWaterTemperatureActionTypeId) {
-        device->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetWaterTemperatureActionTargetWaterTemperatureParamTypeId).value());
+        thing->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetWaterTemperatureActionTargetWaterTemperatureParamTypeId).value());
     }
-    info->finish(Device::DeviceErrorNoError);
+    info->finish(Thing::ThingErrorNoError);
 }

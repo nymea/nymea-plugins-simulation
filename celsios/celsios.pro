@@ -1,5 +1,5 @@
 include($$[QT_INSTALL_PREFIX]/include/nymea/plugin.pri)
 
-SOURCES += deviceplugincelsios.cpp
+SOURCES += integrationplugincelsios.cpp
 
-HEADERS += deviceplugincelsios.h
+HEADERS += integrationplugincelsios.h
