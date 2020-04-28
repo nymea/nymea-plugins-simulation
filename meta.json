@@ -2,7 +2,7 @@
     "title": "Simulation",
     "tagline": "Simulate things in nymea.",
     "icon": "simulation.png",
-    "stability": "community,
+    "stability": "community",
     "offline": true,
     "technology": [
     ],
