@@ -1,0 +1,12 @@
+{
+    "title": "Simulation",
+    "tagline": "Simulate things in nymea.",
+    "icon": "simulation.png",
+    "stability": "community,
+    "offline": true,
+    "technology": [
+    ],
+    "categories": [
+        "tool"
+    ]
+}
