@@ -1,7 +1,7 @@
 {
-    "title": "Simulation",
-    "tagline": "Simulate things in nymea.",
-    "icon": "simulation.png",
+    "title": "Celsios",
+    "tagline": "Simulated Heating.",
+    "icon": "celsios.svg",
     "stability": "community",
     "offline": true,
     "technology": [
