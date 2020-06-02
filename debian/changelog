@@ -1,7 +1,9 @@
-nymea-plugins-simulation (0.8) UNRELEASED; urgency=medium
+nymea-plugins-simulation (0.8) xenial; urgency=medium
 
+  [ Michael Zanetti ]
+  * Fix duplicate UUID for connected state type
 
- -- Michael Zanetti <michael.zanetti@guh.io>  Wed, 15 Apr 2020 13:11:22 +0200
+ -- Jenkins <jenkins@nymea.io>  Tue, 02 Jun 2020 21:02:18 +0200
 
 nymea-plugins-simulation (0.7) xenial; urgency=medium
 
