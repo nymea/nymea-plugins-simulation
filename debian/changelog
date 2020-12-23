@@ -1,7 +1,9 @@
-nymea-plugins-simulation (0.10) UNRELEASED; urgency=medium
+nymea-plugins-simulation (0.10) xenial; urgency=medium
 
+  [ Michael Zanetti ]
+  * No change rebuild against new ABI
 
- -- Michael Zanetti <michael.zanetti@nymea.io>  Wed, 23 Dec 2020 15:06:52 +0100
+ -- Jenkins <jenkins@nymea.io>  Wed, 23 Dec 2020 15:27:30 +0100
 
 nymea-plugins-simulation (0.9) xenial; urgency=medium
 
