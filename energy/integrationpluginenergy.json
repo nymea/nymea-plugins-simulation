@@ -23,6 +23,16 @@
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["evcharger"],
+                    "settingsTypes": [
+                        {
+                            "id": "73df6376-2495-4d61-a832-6de922528c6a",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "A"
+                        }
+                    ],
                     "stateTypes":[
                         {
                             "id": "568ad91a-c6b3-4b20-82d9-ea5afe38c209",
@@ -63,6 +73,13 @@
                             "unit": "Watt",
                             "type": "double",
                             "defaultValue": 5000
+                        },
+                        {
+                            "id": "39f902a6-8b16-4da2-86eb-e984735b426d",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"]
                         }
                     ],
                     "stateTypes":[
@@ -253,6 +270,61 @@
                             "displayNameEvent": "Voltage changed (Phase C)",
                             "type": "double",
                             "unit": "Volt",
+                            "defaultValue": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "51a34654-0e29-45ef-b361-305633838bf2",
+                    "name": "stove",
+                    "displayName": "nymea stove",
+                    "createMethods": ["user"],
+                    "interfaces": ["smartmeterconsumer"],
+                    "settingsTypes": [
+                        {
+                            "id": "60c12282-95ba-493c-83c2-9e1643a0fe37",
+                            "name": "maxPowerConsumption",
+                            "displayName": "Maximum power consumption",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 2000
+                        },
+                        {
+                            "id": "4a95a01f-0844-4c9c-b130-ee9cbc19351a",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C"],
+                            "defaultValue": "A"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "1ad5de19-fc06-49ca-ba26-38ad71835395",
+                            "name": "power",
+                            "displayName": "On",
+                            "displayNameEvent": "Turned on or off",
+                            "displayNameAction": "Turn on or off",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true
+                        },
+                        {
+                            "id": "ef55604c-6786-4f6f-a7e2-841928e7c254",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed engery changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "4ceb715d-fb5e-432a-aeff-663fc3d4e43e",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameEvent": "Current power consumption changed",
+                            "type": "double",
+                            "unit": "Watt",
                             "defaultValue": 0
                         }
                     ]

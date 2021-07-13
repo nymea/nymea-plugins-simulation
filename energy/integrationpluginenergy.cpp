@@ -37,6 +37,8 @@
 
 #define CIVIL_ZENITH  90.83333
 
+#include <QRandomGenerator>
+
 
 IntegrationPluginEnergy::IntegrationPluginEnergy(QObject *parent): IntegrationPlugin (parent)
 {
@@ -71,6 +73,19 @@ void IntegrationPluginEnergy::thingRemoved(Thing *thing)
 
 void IntegrationPluginEnergy::executeAction(ThingActionInfo *info)
 {
+    if (info->thing()->thingClassId() == stoveThingClassId) {
+        if (info->action().actionTypeId() == stovePowerActionTypeId) {
+            info->thing()->setStateValue(stovePowerStateTypeId, info->action().paramValue(stovePowerActionPowerParamTypeId).toBool());
+        }
+    }
+    if (info->thing()->thingClassId() == wallboxThingClassId) {
+        if (info->action().actionTypeId() == wallboxPowerActionTypeId) {
+            info->thing()->setStateValue(wallboxPowerStateTypeId, info->action().paramValue(wallboxPowerActionPowerParamTypeId).toBool());
+        }
+        if (info->action().actionTypeId() == wallboxMaxChargingCurrentActionTypeId) {
+            info->thing()->setStateValue(wallboxMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
+        }
+    }
     info->finish(Thing::ThingErrorNoError);
 }
 
@@ -80,8 +95,8 @@ void IntegrationPluginEnergy::updateSimulation()
     QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, QDateTime::currentDateTime());
     QDateTime sunrise = sunriseSunset.first;
     QDateTime sunset = sunriseSunset.second;
-    QDateTime now = QDateTime::currentDateTime().addSecs(-60*60*12);
-    qCDebug(dcEnergy()) << "Sunrise:" << sunrise << "Sunset:" << sunset << "Now" << now;
+    QDateTime now = QDateTime::currentDateTime();//.addSecs(-60*60*12);
+//    qCDebug(dcEnergy()) << "Sunrise:" << sunrise << "Sunset:" << sunset << "Now" << now;
     if (sunrise < now && now < sunset) {
         qlonglong msecsOfLight = sunriseSunset.second.toMSecsSinceEpoch() - sunriseSunset.first.toMSecsSinceEpoch();
         qlonglong currentMSecOfLight = now.toMSecsSinceEpoch() - sunrise.toMSecsSinceEpoch();
@@ -98,20 +113,126 @@ void IntegrationPluginEnergy::updateSimulation()
         }
     }
 
+    // Update evchargers
+    foreach (Thing* evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
+        int chargePercentage = evCharger->property("chargePercentage").toInt();
+        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
+            if (chargePercentage < 100) {
+                evCharger->setProperty("chargePercentage", chargePercentage + 1);
+            }
+        } else {
+            if (chargePercentage > 0) {
+                evCharger->setProperty("chargePercentage", chargePercentage - 1);
+            }
+        }
+    }
 
-    // Update energy meter by summing up all the above
-    double totalProduction = 0;
+    // Update stove
+    foreach (Thing *stove, myThings().filterByThingClassId(stoveThingClassId)) {
+        if (stove->stateValue(stovePowerStateTypeId).toBool()) {
+            int cycle = stove->property("simulationCycle").toInt() % 12;
+            double maxPower = stove->setting(stoveSettingsMaxPowerConsumptionParamTypeId).toDouble();
+            double currentPower = 0;
+            double totalEnergyConsumed = stove->stateValue(stoveTotalEnergyConsumedStateTypeId).toDouble();
+            if (cycle < 4) {
+                currentPower = maxPower;
+                totalEnergyConsumed += (maxPower / 1000) / 60 / 60 * 5;
+            }
+            stove->setStateValue(stoveCurrentPowerStateTypeId, currentPower);
+            stove->setStateValue(stoveTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+            stove->setProperty("simulationCycle", cycle + 1);
+        }
+    }
+
+    /////////////////////////////////////////////////////
+    /// Energy meter
+    ////////////////////////////////////////////////////
+
+    // Sum up production from inverters
+    QHash<QString, double> totalPhaseProduction = {
+        {"A", 0},
+        {"B", 0},
+        {"C", 0}
+    };
     foreach (Thing *inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
-        totalProduction += inverter->stateValue(solarInverterCurrentPowerStateTypeId).toDouble();
+        QString phase = inverter->setting(solarInverterSettingsPhaseParamTypeId).toString();
+        double production = inverter->stateValue(solarInverterCurrentPowerStateTypeId).toDouble();
+        if (phase == "All") {
+            totalPhaseProduction["A"] += production / 3;
+            totalPhaseProduction["B"] += production / 3;
+            totalPhaseProduction["C"] += production / 3;
+        } else {
+            totalPhaseProduction[phase] += production;
+        }
+    }
+
+    // Sum up consumption of all consumers
+    QHash<QString, double> totalPhasesConsumption = {
+        {"A", 0},
+        {"B", 0},
+        {"C", 0}
+    };
+    // Simulate a base consumption of 300W (100 on each phase) + 10W jitter
+    totalPhasesConsumption["A"] += 100 + QRandomGenerator::global()->bounded(10);
+    totalPhasesConsumption["B"] += 100 + QRandomGenerator::global()->bounded(10);
+    totalPhasesConsumption["C"] += 100 + QRandomGenerator::global()->bounded(10);
+
+    // And add simulation devices consumption
+    foreach (Thing *consumer, myThings()) {
+        // FIXME: energymeter should not inherit smartmeter*
+        if (consumer->thingClass().interfaces().contains("smartmeterconsumer") && !consumer->thingClass().interfaces().contains("energymeter")) {
+            QString phase = consumer->setting("phase").toString();
+            totalPhasesConsumption[phase] += consumer->stateValue("currentPower").toDouble();
+        }
+    }
+
+    // Add evchargers
+    foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
+        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool() && evCharger->property("chargePercentage").toInt() < 100) {
+            double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
+            double currentConsumption = maxChargingCurrent * 220;
+            QString phase = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString();
+            if (phase == "All") {
+                totalPhasesConsumption["A"] += currentConsumption / 3;
+                totalPhasesConsumption["B"] += currentConsumption / 3;
+                totalPhasesConsumption["C"] += currentConsumption / 3;
+            } else {
+                totalPhasesConsumption[phase] += currentConsumption;
+            }
+        }
+    }
+
+
+    // Sum up all phases for the total consumption/production (momentary, in Watt)
+    double totalProduction = 0;
+    foreach (double phaseProduction, totalPhaseProduction) {
+        totalProduction += phaseProduction;
     }
     double totalConsumption = 0;
-    // Simulate a base consumption of 300W
-    totalConsumption += 300;
-
-    double grandTotal = totalConsumption + totalProduction; // Note: production is negative
-    foreach (Thing *smartMeter, myThings().filterByThingClassId(smartMeterThingClassId)) {
-        smartMeter->setStateValue(smartMeterCurrentPowerStateTypeId, grandTotal);
+    foreach (double phaseConsumption, totalPhasesConsumption) {
+        totalConsumption += phaseConsumption;
     }
+    double grandTotal = totalConsumption + totalProduction; // Note: production is negative
+
+    foreach (Thing *smartMeter, myThings().filterByThingClassId(smartMeterThingClassId)) {
+        // First set current power consumptions
+        smartMeter->setStateValue(smartMeterCurrentPowerPhaseAStateTypeId, totalPhasesConsumption["A"] + totalPhaseProduction["A"]);
+        smartMeter->setStateValue(smartMeterCurrentPowerPhaseBStateTypeId, totalPhasesConsumption["B"] + totalPhaseProduction["B"]);
+        smartMeter->setStateValue(smartMeterCurrentPowerPhaseCStateTypeId, totalPhasesConsumption["C"] + totalPhaseProduction["C"]);
+        smartMeter->setStateValue(smartMeterCurrentPowerStateTypeId, grandTotal);
+
+        // Add up total consumed/returned
+        // Transform current power to kWh for the last 5 secs (simulation interval)
+        double consumption = grandTotal / 1000 / 60 / 60 * 5;
+        if (grandTotal > 0) {
+            double totalEnergyConsumed = smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble();
+            smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, totalEnergyConsumed + consumption);
+        } else {
+            double totalEnergyReturned = smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble();
+            smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned - consumption);
+        }
+    }
+
 }
 
 QPair<QDateTime, QDateTime> IntegrationPluginEnergy::calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime)
