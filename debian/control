@@ -1,23 +1,34 @@
 Source: nymea-plugins-simulation
 Section: utils
 Priority: options
-Maintainer: Michael Zanetti <michael.zanetti@guh.io>
+Maintainer: Michael Zanetti <michael.zanetti@nymea.io>
 Build-depends: debhelper (>= 0.0.0),
-               libnymea1-dev (>= 0.16),
+               libnymea-dev (>= 0.29~),
                pkg-config,
                python:any,
-               qt5-default,
                qtbase5-dev,
                nymea-dev-tools:native,
 Standards-Version: 3.9.3
 
 
-Package: nymea-plugin-celsios
+Package: nymea-plugin-heating-simulation
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          nymea-plugins-translations,
+Conflicts: nymea-plugin-celsios
+Replaces: nymea-plugin-celsios
 Description: nymea.io simulation plugin for the Celsi°s experience
  This plugin simulates heating pump systems with a heating unit and a
  ventilation unit and works with the Celsi°s experience in nymea:app
+
+Package: nymea-plugin-energy-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         nymea-plugins-translations,
+Description: nymea.io simulation plugin for the nymea.energy experience
+ This plugin simulates energy related devices such as solar inverters,
+ evchargers, energy meters and several other consumers.

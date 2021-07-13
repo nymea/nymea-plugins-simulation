@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 
 PLUGIN_DIRS = \
-    celsios \
-    energy \
+    heatingsimulation \
+    energysimulation \
 
 
 plugininfo.depends = FORCE

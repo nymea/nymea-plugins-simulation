@@ -28,7 +28,7 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "integrationpluginenergy.h"
+#include "integrationpluginenergysimulation.h"
 
 #include "plugintimer.h"
 #include "plugininfo.h"
@@ -37,15 +37,13 @@
 
 #define CIVIL_ZENITH  90.83333
 
-#include <QRandomGenerator>
 
-
-IntegrationPluginEnergy::IntegrationPluginEnergy(QObject *parent): IntegrationPlugin (parent)
+IntegrationPluginEnergySimulation::IntegrationPluginEnergySimulation(QObject *parent): IntegrationPlugin (parent)
 {
 
 }
 
-void IntegrationPluginEnergy::discoverThings(ThingDiscoveryInfo *info)
+void IntegrationPluginEnergySimulation::discoverThings(ThingDiscoveryInfo *info)
 {
     ThingClass thingClass = IntegrationPlugin::thingClass(info->thingClassId());
     for (uint i = 0; i < configValue(energyPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
@@ -55,23 +53,23 @@ void IntegrationPluginEnergy::discoverThings(ThingDiscoveryInfo *info)
     info->finish(Thing::ThingErrorNoError);
 }
 
-void IntegrationPluginEnergy::setupThing(ThingSetupInfo *info)
+void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
 {
     info->finish(Thing::ThingErrorNoError);
 
     if (!m_timer) {
         m_timer = hardwareManager()->pluginTimerManager()->registerTimer(5);
-        connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergy::updateSimulation);
+        connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergySimulation::updateSimulation);
     }
 }
 
 
-void IntegrationPluginEnergy::thingRemoved(Thing *thing)
+void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 {
     Q_UNUSED(thing)
 }
 
-void IntegrationPluginEnergy::executeAction(ThingActionInfo *info)
+void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 {
     if (info->thing()->thingClassId() == stoveThingClassId) {
         if (info->action().actionTypeId() == stovePowerActionTypeId) {
@@ -89,7 +87,7 @@ void IntegrationPluginEnergy::executeAction(ThingActionInfo *info)
     info->finish(Thing::ThingErrorNoError);
 }
 
-void IntegrationPluginEnergy::updateSimulation()
+void IntegrationPluginEnergySimulation::updateSimulation()
 {
     // Update solar inverters
     QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, QDateTime::currentDateTime());
@@ -173,9 +171,9 @@ void IntegrationPluginEnergy::updateSimulation()
         {"C", 0}
     };
     // Simulate a base consumption of 300W (100 on each phase) + 10W jitter
-    totalPhasesConsumption["A"] += 100 + QRandomGenerator::global()->bounded(10);
-    totalPhasesConsumption["B"] += 100 + QRandomGenerator::global()->bounded(10);
-    totalPhasesConsumption["C"] += 100 + QRandomGenerator::global()->bounded(10);
+    totalPhasesConsumption["A"] += 100 + (qrand() % 10);
+    totalPhasesConsumption["B"] += 100 + (qrand() % 10);
+    totalPhasesConsumption["C"] += 100 + (qrand() % 10);
 
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
@@ -235,7 +233,7 @@ void IntegrationPluginEnergy::updateSimulation()
 
 }
 
-QPair<QDateTime, QDateTime> IntegrationPluginEnergy::calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime)
+QPair<QDateTime, QDateTime> IntegrationPluginEnergySimulation::calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime)
 {
     int dayOfYear = dateTime.date().dayOfYear();
     int offset = dateTime.offsetFromUtc() / 60 / 60;

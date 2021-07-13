@@ -28,38 +28,31 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef INTEGRATIONPLUGINENERGY_H
-#define INTEGRATIONPLUGINENERGY_H
+#ifndef INTEGRATIONPLUGINHEATINGSIMULATION_H
+#define INTEGRATIONPLUGINHEATINGSIMULATION_H
 
 #include "integrations/integrationplugin.h"
-#include "extern-plugininfo.h"
 
 class PluginTimer;
 
-class IntegrationPluginEnergy: public IntegrationPlugin
+class ThingPluginHeatingSimulation: public IntegrationPlugin
 {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginenergy.json")
+    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginheatingsimulation.json")
     Q_INTERFACES(IntegrationPlugin)
 
 public:
-    explicit IntegrationPluginEnergy(QObject *parent = nullptr);
-    ~IntegrationPluginEnergy() = default;
+    explicit ThingPluginHeatingSimulation(QObject *parent = nullptr);
+    ~ThingPluginHeatingSimulation() = default;
 
-    void discoverThings(ThingDiscoveryInfo *info) override;
+    void startMonitoringAutoThings() override;
     void setupThing(ThingSetupInfo *info) override;
     void thingRemoved(Thing *thing) override;
     void executeAction(ThingActionInfo *info) override;
-
-private slots:
-    void updateSimulation();
-
-private:
-    QPair<QDateTime, QDateTime> calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime);
 
 private:
     PluginTimer *m_timer = nullptr;
 };
 
-#endif // INTEGRATIONPLUGINENERGY_H
+#endif // INTEGRATIONPLUGINHEATINGSIMULATION_H
