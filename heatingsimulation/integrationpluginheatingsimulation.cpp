@@ -40,11 +40,6 @@ ThingPluginHeatingSimulation::ThingPluginHeatingSimulation(QObject *parent): Int
 
 void ThingPluginHeatingSimulation::startMonitoringAutoThings()
 {
-    if (myThings().isEmpty()) {
-        ThingDescriptor vu(x2luThingClassId, "Celsi°s ventilation unit");
-        ThingDescriptor hu(x2wpThingClassId, "Celsi°s heating unit");
-        emit autoThingsAppeared({hu, vu});
-    }
 }
 
 void ThingPluginHeatingSimulation::setupThing(ThingSetupInfo *info)

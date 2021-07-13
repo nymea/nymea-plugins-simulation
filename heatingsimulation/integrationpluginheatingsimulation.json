@@ -12,7 +12,7 @@
                     "name": "x2lu",
                     "displayName": "X2 LU",
                     "id": "0de8e21e-392a-4790-a78a-b1a7eaa7571b",
-                    "createMethods": ["auto"],
+                    "createMethods": ["user"],
                     "interfaces": ["co2sensor", "connectable"],
                     "stateTypes":[
                         {
@@ -64,7 +64,7 @@
                     "name": "x2wp",
                     "displayName": "X2 WP",
                     "id": "e548f962-92db-4110-8279-10fbcde35f93",
-                    "createMethods": ["auto"],
+                    "createMethods": ["user"],
                     "interfaces": ["thermostat", "heating", "temperaturesensor", "connectable"],
                     "stateTypes":[
 
