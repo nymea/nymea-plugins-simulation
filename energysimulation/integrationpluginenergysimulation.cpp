@@ -45,12 +45,14 @@ IntegrationPluginEnergySimulation::IntegrationPluginEnergySimulation(QObject *pa
 
 void IntegrationPluginEnergySimulation::discoverThings(ThingDiscoveryInfo *info)
 {
-    ThingClass thingClass = IntegrationPlugin::thingClass(info->thingClassId());
-    for (uint i = 0; i < configValue(energyPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
-        ThingDescriptor descriptor(info->thingClassId(), thingClass.displayName());
-        info->addThingDescriptor(descriptor);
-    }
-    info->finish(Thing::ThingErrorNoError);
+    QTimer::singleShot(1000, info, [=]{
+        ThingClass thingClass = IntegrationPlugin::thingClass(info->thingClassId());
+        for (uint i = 0; i < configValue(energyPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
+            ThingDescriptor descriptor(info->thingClassId(), thingClass.displayName());
+            info->addThingDescriptor(descriptor);
+        }
+        info->finish(Thing::ThingErrorNoError);
+    });
 }
 
 void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
@@ -82,6 +84,16 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         }
         if (info->action().actionTypeId() == wallboxMaxChargingCurrentActionTypeId) {
             info->thing()->setStateValue(wallboxMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
+        }
+    }
+    if (info->thing()->thingClassId() == carThingClassId) {
+        if (info->action().actionTypeId() == carPluggedInActionTypeId) {
+            info->thing()->setStateValue(carPluggedInStateTypeId, info->action().paramValue(carPluggedInActionPluggedInParamTypeId));
+            // Also set the plugged in state on the wallbox (using the first we can find for now...)
+            foreach (Thing *thing, myThings().filterByThingClassId(wallboxThingClassId)) {
+                thing->setStateValue(wallboxPluggedInStateTypeId, info->action().paramValue(carPluggedInActionPluggedInParamTypeId));
+                break;
+            }
         }
     }
     info->finish(Thing::ThingErrorNoError);

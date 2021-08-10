@@ -56,6 +56,14 @@
                             "maxValue": 63,
                             "unit": "Ampere",
                             "writable": true
+                        },
+                        {
+                            "id": "ef839e7e-c2ef-4b2e-b360-2494b7ecabc1",
+                            "name": "pluggedIn",
+                            "displayName": "Car is plugged in",
+                            "displayNameEvent": "Car plugged/unplugged",
+                            "type": "bool",
+                            "defaultValue": false
                         }
                     ]
                 },
@@ -64,7 +72,7 @@
                     "displayName": "nymea solar inverter",
                     "id": "f1e91782-8bc1-4bcb-a07e-e66b01fe7be5",
                     "createMethods": ["discovery", "user"],
-                    "interfaces": ["smartmeterproducer"],
+                    "interfaces": ["solarinverter"],
                     "settingsTypes": [
                         {
                             "id": "73e80177-5a38-4139-957d-97cda3e0fae3",
@@ -79,7 +87,8 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"]
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
                         }
                     ],
                     "stateTypes":[
@@ -326,6 +335,42 @@
                             "type": "double",
                             "unit": "Watt",
                             "defaultValue": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
+                    "name": "car",
+                    "displayName": "nymea car",
+                    "createMethods": ["user"],
+                    "interfaces": ["electricvehicle"],
+                    "stateTypes": [
+                        {
+                            "id": "59f7be2e-f63d-4f23-a2b5-f045c1b39aab",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "displayNameEvent": "Battery capacity changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 50
+                        },
+                        {
+                            "id": "322d64cd-c136-4e74-a60b-c39480513b65",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "displayNameEvent": "Battery eneterd or left critical state",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "6a47ad6a-5936-4cd7-9200-cfc31ee556c3",
+                            "name": "pluggedIn",
+                            "displayName": "Plugged in",
+                            "displayNameEvent": "Plugged/unplugged",
+                            "displayNameAction": "Plug/unplug",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true
                         }
                     ]
                 }
