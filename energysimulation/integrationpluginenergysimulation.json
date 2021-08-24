@@ -63,7 +63,8 @@
                             "displayName": "Car is plugged in",
                             "displayNameEvent": "Car plugged/unplugged",
                             "type": "bool",
-                            "defaultValue": false
+                            "defaultValue": false,
+                            "cached": false
                         }
                     ]
                 },
@@ -108,7 +109,8 @@
                             "displayNameEvent": "Current power production changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         }
                     ]
                 },
@@ -144,7 +146,8 @@
                             "displayNameEvent": "Current power consumption changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         },
                         {
                             "id": "738310b9-f562-4754-b02b-294f9a7d058c",
@@ -207,7 +210,8 @@
                             "displayNameEvent": "Current power usage changed (Phase A)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         },
                         {
                             "id": "3cf31a0b-d91d-4b1e-8fa6-6c322a71d43d",
@@ -216,7 +220,8 @@
                             "displayNameEvent": "Current power usage changed (Phase B)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         },
                         {
                             "id": "9e6369af-6431-4002-8669-0fb18f81ebf5",
@@ -225,7 +230,8 @@
                             "displayNameEvent": "Current power usage changed (Phase C)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         },
                         {
                             "id": "158de792-0001-4f87-8903-f80ebbc65ac0",
@@ -334,7 +340,8 @@
                             "displayNameEvent": "Current power consumption changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         }
                     ]
                 },
@@ -363,6 +370,18 @@
                             "defaultValue": false
                         },
                         {
+                            "id": "fa4ad65e-d09e-48ad-a33c-5359788f5628",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "displayNameEvent": "Battery level changed",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0,
+                            "cached": false
+                        },
+                        {
                             "id": "6a47ad6a-5936-4cd7-9200-cfc31ee556c3",
                             "name": "pluggedIn",
                             "displayName": "Plugged in",
@@ -370,7 +389,8 @@
                             "displayNameAction": "Plug/unplug",
                             "type": "bool",
                             "defaultValue": false,
-                            "writable": true
+                            "writable": true,
+                            "cached": false
                         }
                     ]
                 }

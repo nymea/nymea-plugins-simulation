@@ -88,11 +88,34 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
     }
     if (info->thing()->thingClassId() == carThingClassId) {
         if (info->action().actionTypeId() == carPluggedInActionTypeId) {
-            info->thing()->setStateValue(carPluggedInStateTypeId, info->action().paramValue(carPluggedInActionPluggedInParamTypeId));
-            // Also set the plugged in state on the wallbox (using the first we can find for now...)
-            foreach (Thing *thing, myThings().filterByThingClassId(wallboxThingClassId)) {
-                thing->setStateValue(wallboxPluggedInStateTypeId, info->action().paramValue(carPluggedInActionPluggedInParamTypeId));
-                break;
+
+            if (info->action().paramValue(carPluggedInActionPluggedInParamTypeId).toBool()) {
+                // Try to plug the car to the first free wallbox
+                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
+                    if (wallbox->property("connectedCarThingId").toUuid().isNull()) {
+                        // Found an empty wallbox, plugging it in
+                        wallbox->setProperty("connectedCarThingId", info->thing()->id());
+                        info->thing()->setStateValue(carPluggedInStateTypeId, true);
+                        wallbox->setStateValue(wallboxPluggedInStateTypeId, true);
+                        info->finish(Thing::ThingErrorNoError);
+                        return;
+                    }
+                }
+                // No wallbox found where we could plug into... Failing action
+                info->finish(Thing::ThingErrorHardwareNotAvailable, "No wallbox free wallbox found");
+                return;
+            } else {
+                info->thing()->setStateValue(carPluggedInStateTypeId, false);
+                // Unplug from wallbox
+                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
+                    if (wallbox->property("connectedCarThingId").toUuid() == info->thing()->id()) {
+                        wallbox->setProperty("connectedCarThingId", QUuid());
+                        wallbox->setStateValue(wallboxPluggedInStateTypeId, false);
+                        break;
+                    }
+                }
+                info->finish(Thing::ThingErrorNoError);
+                return;
             }
         }
     }
@@ -125,15 +148,23 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
     // Update evchargers
     foreach (Thing* evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
-        int chargePercentage = evCharger->property("chargePercentage").toInt();
-        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
-            if (chargePercentage < 100) {
-                evCharger->setProperty("chargePercentage", chargePercentage + 1);
+        if (evCharger->stateValue(wallboxPluggedInStateTypeId).toBool() && evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
+            ThingId connectedCarThingId = evCharger->property("connectedCarThingId").toUuid();
+            Thing *car = myThings().findById(connectedCarThingId);
+            if (car) {
+                if (car->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
+                    car->setStateValue(carBatteryLevelStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() + 1);
+                    car->setStateValue(carBatteryCriticalStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() < 10);
+                }
             }
-        } else {
-            if (chargePercentage > 0) {
-                evCharger->setProperty("chargePercentage", chargePercentage - 1);
-            }
+        }
+    }
+
+    // Reduce battery level on all unplugged cars
+    foreach (Thing *car, myThings().filterByThingClassId(carThingClassId)) {
+        if (!car->stateValue(carPluggedInStateTypeId).toBool() && car->stateValue(carBatteryLevelStateTypeId).toInt() > 0) {
+            car->setStateValue(carBatteryLevelStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() - 1);
+            car->setStateValue(carBatteryCriticalStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() < 10);
         }
     }
 
@@ -198,9 +229,14 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
     // Add evchargers
     foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
-        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool() && evCharger->property("chargePercentage").toInt() < 100) {
+        Thing *connectedCar = myThings().findById(evCharger->property("connectedCarThingId").toUuid());
+        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()
+                && evCharger->stateValue(wallboxPluggedInStateTypeId).toBool()
+                && connectedCar && connectedCar->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
             double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
             double currentConsumption = maxChargingCurrent * 220;
+            // Our simulated cars only draw up to a limit of 5kW (seems more realistic than a car charging with the full capacity of 14.3kW)
+            currentConsumption = qMin(currentConsumption, 5000.0);
             QString phase = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString();
             if (phase == "All") {
                 totalPhasesConsumption["A"] += currentConsumption / 3;
@@ -242,7 +278,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned - consumption);
         }
     }
-
 }
 
 QPair<QDateTime, QDateTime> IntegrationPluginEnergySimulation::calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime)
