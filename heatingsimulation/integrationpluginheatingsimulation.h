@@ -28,23 +28,23 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef INTEGRATIONPLUGINCELSIOS_H
-#define INTEGRATIONPLUGINCELSIOS__H
+#ifndef INTEGRATIONPLUGINHEATINGSIMULATION_H
+#define INTEGRATIONPLUGINHEATINGSIMULATION_H
 
 #include "integrations/integrationplugin.h"
 
 class PluginTimer;
 
-class ThingPluginCelsios: public IntegrationPlugin
+class ThingPluginHeatingSimulation: public IntegrationPlugin
 {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationplugincelsios.json")
+    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginheatingsimulation.json")
     Q_INTERFACES(IntegrationPlugin)
 
 public:
-    explicit ThingPluginCelsios(QObject *parent = nullptr);
-    ~ThingPluginCelsios() = default;
+    explicit ThingPluginHeatingSimulation(QObject *parent = nullptr);
+    ~ThingPluginHeatingSimulation() = default;
 
     void startMonitoringAutoThings() override;
     void setupThing(ThingSetupInfo *info) override;
@@ -55,4 +55,4 @@ private:
     PluginTimer *m_timer = nullptr;
 };
 
-#endif // INTEGRATIONPLUGINCELSIOS__H
+#endif // INTEGRATIONPLUGINHEATINGSIMULATION_H

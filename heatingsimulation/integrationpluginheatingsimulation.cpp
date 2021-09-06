@@ -28,26 +28,21 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "integrationplugincelsios.h"
+#include "integrationpluginheatingsimulation.h"
 #include "plugininfo.h"
 
 #include "plugintimer.h"
 
-ThingPluginCelsios::ThingPluginCelsios(QObject *parent): IntegrationPlugin (parent)
+ThingPluginHeatingSimulation::ThingPluginHeatingSimulation(QObject *parent): IntegrationPlugin (parent)
 {
 
 }
 
-void ThingPluginCelsios::startMonitoringAutoThings()
+void ThingPluginHeatingSimulation::startMonitoringAutoThings()
 {
-    if (myThings().isEmpty()) {
-        ThingDescriptor vu(x2luThingClassId, "Celsi°s ventilation unit");
-        ThingDescriptor hu(x2wpThingClassId, "Celsi°s heating unit");
-        emit autoThingsAppeared({hu, vu});
-    }
 }
 
-void ThingPluginCelsios::setupThing(ThingSetupInfo *info)
+void ThingPluginHeatingSimulation::setupThing(ThingSetupInfo *info)
 {
     Thing *thing = info->thing();
 
@@ -108,7 +103,7 @@ void ThingPluginCelsios::setupThing(ThingSetupInfo *info)
 }
 
 
-void ThingPluginCelsios::thingRemoved(Thing *thing)
+void ThingPluginHeatingSimulation::thingRemoved(Thing *thing)
 {
     Q_UNUSED(thing)
     if (myThings().isEmpty()) {
@@ -117,7 +112,7 @@ void ThingPluginCelsios::thingRemoved(Thing *thing)
     }
 }
 
-void ThingPluginCelsios::executeAction(ThingActionInfo *info)
+void ThingPluginHeatingSimulation::executeAction(ThingActionInfo *info)
 {
     Thing *thing = info->thing();
     Action action = info->action();
