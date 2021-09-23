@@ -65,6 +65,25 @@
                             "type": "bool",
                             "defaultValue": false,
                             "cached": false
+                        },
+                        {
+                            "id": "e26730c0-dd42-4383-84e0-bda7051aa438",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed energy changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "015f5a5d-d67b-4cb0-81ce-4098c316c8ae",
+                            "name": "currentPower",
+                            "displayName": "Current power usage",
+                            "displayNameEvent": "Current power usage changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "filter": "adaptive"
                         }
                     ]
                 },
@@ -471,7 +490,8 @@
                             "displayName": "Battery capacity",
                             "displayNameEvent": "Battery capacity changed",
                             "type": "double",
-                            "defaultValue": 10000
+                            "unit": "KiloWattHour",
+                            "defaultValue": 10
                         }
                     ]
                 }
