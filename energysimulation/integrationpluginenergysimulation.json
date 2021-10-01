@@ -1,5 +1,5 @@
 {
-    "name": "energy",
+    "name": "energySimulation",
     "displayName": "nymea.energy simulation",
     "id": "9a3d179a-aff2-4b1a-a250-3d730dd82df3",
     "paramTypes": [
@@ -31,6 +31,14 @@
                             "type": "QString",
                             "allowedValues": ["A", "B", "C", "All"],
                             "defaultValue": "A"
+                        },
+                        {
+                            "id": "b85d5c69-5d30-4b07-a86f-2e0dd5a3c1c1",
+                            "name": "maxChargingCurrentUpperLimit",
+                            "displayName": "Upper limit for maximum charging current",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 63
                         }
                     ],
                     "stateTypes":[
