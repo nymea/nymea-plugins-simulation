@@ -92,6 +92,14 @@
                             "unit": "Watt",
                             "defaultValue": 0,
                             "filter": "adaptive"
+                        },
+                        {
+                            "id": "8a3b2acb-7665-4050-a039-f67a2ba3100f",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "displayNameEvent": "Charging changed",
+                            "type": "bool",
+                            "defaultValue": false
                         }
                     ]
                 },

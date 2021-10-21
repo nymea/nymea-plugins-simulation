@@ -128,7 +128,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                     }
                 }
                 // No wallbox found where we could plug into... Failing action
-                info->finish(Thing::ThingErrorHardwareNotAvailable, "No wallbox free wallbox found");
+                info->finish(Thing::ThingErrorHardwareNotAvailable, "No free wallbox found");
                 return;
             } else {
                 info->thing()->setStateValue(carPluggedInStateTypeId, false);
@@ -181,6 +181,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             Thing *car = myThings().findById(connectedCarThingId);
             qCDebug(dcEnergySimulation()) << "* Evaluating wallbox:" << evCharger->name() << "Connected car:" << (car ? car->name() : "none");
             if (car && car->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
+                evCharger->setStateValue(wallboxChargingStateTypeId, true);
                 QDateTime lastChargeUpdateTime = car->property("lastChargeUpdateTime").toDateTime();
                 if (lastChargeUpdateTime.isNull()) {
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
@@ -207,11 +208,13 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     car->setStateValue(carBatteryCriticalStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() < 10);
                 }
             } else {
-                qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car already full";
+                qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car already full)";
+                evCharger->setStateValue(wallboxChargingStateTypeId, false);
                 evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
             }
         } else {
             qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car not plugged in or charging disabled)";
+            evCharger->setStateValue(wallboxChargingStateTypeId, false);
             evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
         }
     }
