@@ -125,6 +125,15 @@
                             "type": "QString",
                             "allowedValues": ["A", "B", "C", "All"],
                             "defaultValue": "All"
+                        },
+                        {
+                            "id": "73b52d8a-0a86-4e6f-a149-b769294781d6",
+                            "name": "hoursOffset",
+                            "displayName": "Simulation hours offset",
+                            "type": "int",
+                            "minValue": -24,
+                            "maxValue": 24,
+                            "defaultValue": 0
                         }
                     ],
                     "stateTypes":[
