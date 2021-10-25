@@ -3,6 +3,9 @@ TEMPLATE = subdirs
 PLUGIN_DIRS = \
     heatingsimulation \
     energysimulation \
+    sensorssimulation \
+    closablessimulation \
+    appliancessimulation \
 
 
 plugininfo.depends = FORCE

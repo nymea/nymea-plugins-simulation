@@ -28,43 +28,48 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef INTEGRATIONPLUGINHEATINGSIMULATION_H
-#define INTEGRATIONPLUGINHEATINGSIMULATION_H
+#ifndef INTEGRATIONPLUGINSIMMULATION_H
+#define INTEGRATIONPLUGINSIMMULATION_H
 
 #include "integrations/integrationplugin.h"
+#include "plugintimer.h"
+
+#include <QDateTime>
 
 #include "extern-plugininfo.h"
 
-#include <QTimer>
-
-class PluginTimer;
-
-class IntegrationPluginHeatingSimulation: public IntegrationPlugin
+class IntegrationPluginSimulation : public IntegrationPlugin
 {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginheatingsimulation.json")
+    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginclosablessimulation.json")
     Q_INTERFACES(IntegrationPlugin)
 
+
 public:
-    explicit IntegrationPluginHeatingSimulation(QObject *parent = nullptr);
-    ~IntegrationPluginHeatingSimulation();
+    explicit IntegrationPluginSimulation();
+    ~IntegrationPluginSimulation();
 
     void init() override;
-    void startMonitoringAutoThings() override;
     void setupThing(ThingSetupInfo *info) override;
     void thingRemoved(Thing *thing) override;
     void executeAction(ThingActionInfo *info) override;
 
+private:
+
+    int generateRandomIntValue(int min, int max);
+    double generateRandomDoubleValue(double min, double max);
+    bool generateRandomBoolValue();
+
+    // Generates values in a sin curve from min to max, moving the start by hourOffset from midnight
+    qreal generateSinValue(int min, int max, int hourOffset, int decimals = 2);
+    qreal generateBatteryValue(int chargeStartHour, int chargeDurationInMinutes);
+    qreal generateNoisyRectangle(int min, int max, int noise, int stablePeriodInMinutes, int &lastValue, QDateTime &lastChangeTimestamp);
+
+    QHash<Thing*, QTimer*> m_simulationTimers;
 private slots:
-    void onPluginTimer20Seconds();
-    void onPluginTimer1Minute();
     void simulationTimerTimeout();
 
-private:
-    PluginTimer *m_pluginTimer20Seconds = nullptr;
-    PluginTimer *m_pluginTimer1Min = nullptr;
-    QHash<Thing*, QTimer*> m_simulationTimers;
 };
 
-#endif // INTEGRATIONPLUGINHEATINGSIMULATION_H
+#endif // INTEGRATIONPLUGINSIMMULATION_H
