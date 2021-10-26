@@ -88,7 +88,6 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
     }
     if (info->thing()->thingClassId() == carThingClassId) {
         if (info->action().actionTypeId() == carPluggedInActionTypeId) {
-
             if (info->action().paramValue(carPluggedInActionPluggedInParamTypeId).toBool()) {
                 // Try to plug the car to the first free wallbox
                 foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
@@ -117,6 +116,8 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                 info->finish(Thing::ThingErrorNoError);
                 return;
             }
+        } else if (info->action().actionTypeId() == carMinChargingCurrentActionTypeId) {
+            info->thing()->setStateValue(carMinChargingCurrentStateTypeId, info->action().paramValue(carMinChargingCurrentActionMinChargingCurrentParamTypeId));
         }
     }
     info->finish(Thing::ThingErrorNoError);

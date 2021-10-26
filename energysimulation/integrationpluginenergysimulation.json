@@ -19,7 +19,7 @@
             "thingClasses": [
                 {
                     "name": "wallbox",
-                    "displayName": "nymea wallbox",
+                    "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["evcharger"],
@@ -70,7 +70,7 @@
                 },
                 {
                     "name": "solarInverter",
-                    "displayName": "nymea solar inverter",
+                    "displayName": "Simulated solar inverter",
                     "id": "f1e91782-8bc1-4bcb-a07e-e66b01fe7be5",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["solarinverter"],
@@ -116,7 +116,7 @@
                 },
                 {
                     "name": "smartMeter",
-                    "displayName": "nymea smart meter",
+                    "displayName": "Simulated smart meter",
                     "id": "d96c77e3-dbf1-4875-95a4-7ca85aa3ef8e",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["energymeter"],
@@ -292,7 +292,7 @@
                 {
                     "id": "51a34654-0e29-45ef-b361-305633838bf2",
                     "name": "stove",
-                    "displayName": "nymea stove",
+                    "displayName": "Simulated stove",
                     "createMethods": ["user"],
                     "interfaces": ["smartmeterconsumer"],
                     "settingsTypes": [
@@ -348,7 +348,7 @@
                 {
                     "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
                     "name": "car",
-                    "displayName": "nymea car",
+                    "displayName": "Simulated car",
                     "createMethods": ["user"],
                     "interfaces": ["electricvehicle"],
                     "stateTypes": [
@@ -391,6 +391,19 @@
                             "defaultValue": false,
                             "writable": true,
                             "cached": false
+                        },
+                        {
+                            "id": "612cf64d-b67f-45c3-8558-b1975419f25f",
+                            "name": "minChargingCurrent",
+                            "displayName": "Minimal charging current",
+                            "displayNameEvent": "Minimal charging current changed",
+                            "displayNameAction": "Set minimal charging current",
+                            "type": "uint",
+                            "unit": "Ampere",
+                            "minValue": 6,
+                            "maxValue": 16,
+                            "defaultValue": 6,
+                            "writable": true
                         }
                     ]
                 }
