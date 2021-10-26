@@ -435,6 +435,19 @@
                             "defaultValue": false,
                             "writable": true,
                             "cached": false
+                        },
+                        {
+                            "id": "612cf64d-b67f-45c3-8558-b1975419f25f",
+                            "name": "minChargingCurrent",
+                            "displayName": "Minimal charging current",
+                            "displayNameEvent": "Minimal charging current changed",
+                            "displayNameAction": "Set minimal charging current",
+                            "type": "uint",
+                            "unit": "Ampere",
+                            "minValue": 6,
+                            "maxValue": 16,
+                            "defaultValue": 6,
+                            "writable": true
                         }
                     ]
                 },
