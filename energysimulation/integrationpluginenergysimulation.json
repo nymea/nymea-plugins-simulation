@@ -58,12 +58,31 @@
                             "displayName": "Maximum charging current",
                             "displayNameEvent": "Maximum charging current changed",
                             "displayNameAction": "Set maximum charging current",
-                            "type": "double",
-                            "defaultValue": 63,
+                            "type": "uint",
+                            "defaultValue":6,
                             "minValue": 6,
-                            "maxValue": 63,
+                            "maxValue": 32,
                             "unit": "Ampere",
                             "writable": true
+                        },
+                        {
+                            "id": "9062e1d1-f5a3-48da-93c6-752988823c71",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameEvent": "Current power consumption changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "filter": "adaptive"
+                        },
+                        {
+                            "id": "c296b36f-3d5a-48dc-8d1e-3686accd558b",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed engery changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
                         },
                         {
                             "id": "ef839e7e-c2ef-4b2e-b360-2494b7ecabc1",
@@ -75,31 +94,23 @@
                             "cached": false
                         },
                         {
-                            "id": "e26730c0-dd42-4383-84e0-bda7051aa438",
-                            "name": "totalEnergyConsumed",
-                            "displayName": "Total consumed energy",
-                            "displayNameEvent": "Total consumed energy changed",
-                            "type": "double",
-                            "unit": "KiloWattHour",
-                            "defaultValue": 0
-                        },
-                        {
-                            "id": "015f5a5d-d67b-4cb0-81ce-4098c316c8ae",
-                            "name": "currentPower",
-                            "displayName": "Current power usage",
-                            "displayNameEvent": "Current power usage changed",
-                            "type": "double",
-                            "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
-                        },
-                        {
                             "id": "8a3b2acb-7665-4050-a039-f67a2ba3100f",
                             "name": "charging",
                             "displayName": "Charging",
                             "displayNameEvent": "Charging changed",
                             "type": "bool",
-                            "defaultValue": false
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "0b7ec5ce-57fd-4ae3-a10f-0685a129634e",
+                            "name": "phaseCount",
+                            "displayName": "Active phases",
+                            "displayNameEvent": "Active phase count changed",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 1
                         }
                     ]
                 },
