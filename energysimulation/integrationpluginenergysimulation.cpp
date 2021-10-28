@@ -297,6 +297,33 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
+    // Add evchargers
+    foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
+        Thing *connectedCar = myThings().findById(evCharger->property("connectedCarThingId").toUuid());
+        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()
+                && evCharger->stateValue(wallboxPluggedInStateTypeId).toBool()
+                && connectedCar && connectedCar->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
+            uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
+            double currentConsumption = maxChargingCurrent * 230; // One phase
+
+            evCharger->setStateValue(wallboxChargingStateTypeId, true);
+
+            qCDebug(dcEnergySimulation()) << "* Wallbox" << evCharger->name() << "consumes" << currentConsumption << "W";
+            QString phase = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString();
+            if (phase == "All") {
+                totalPhasesConsumption["A"] += currentConsumption;
+                totalPhasesConsumption["B"] += currentConsumption;
+                totalPhasesConsumption["C"] += currentConsumption;
+                evCharger->setStateValue(wallboxPhaseCountStateTypeId, 3);
+            } else {
+                totalPhasesConsumption[phase] += currentConsumption;
+                evCharger->setStateValue(wallboxPhaseCountStateTypeId, 1);
+            }
+        } else {
+            evCharger->setStateValue(wallboxChargingStateTypeId, false);
+        }
+    }
+
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
     double totalProduction = 0;
