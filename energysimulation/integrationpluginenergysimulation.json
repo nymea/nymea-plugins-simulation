@@ -543,6 +543,145 @@
                             "defaultValue": 10
                         }
                     ]
+                },
+                {
+                    "id": "e413a8a8-ab95-408b-998e-8a0d24602037",
+                    "name": "sgReadyHeatPump",
+                    "displayName": "Simulated heat pump (SG Ready)",
+                    "createMethods": ["user"],
+                    "interfaces": [ "smartgridheatpump", "smartmeterconsumer" ],
+                    "settingsTypes": [
+                        {
+                            "id": "f9674cd1-a019-4e0b-81c3-3c01bff427cf",
+                            "name": "minConsumption",
+                            "displayName": "Minimal consumption",
+                            "unit": "Watt",
+                            "type": "uint",
+                            "defaultValue": 3000
+                        },
+                        {
+                            "id": "78371258-ea51-42b9-8a18-aa5d56fe6e6d",
+                            "name": "maxConsumption",
+                            "displayName": "Maximal consumption",
+                            "unit": "Watt",
+                            "type": "uint",
+                            "defaultValue": 9000
+                        },
+                        {
+                            "id": "79a06b96-b93b-4885-a01f-3afee8b1abec",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "82b38d32-a277-41bb-a09a-44d6d503fc7a",
+                            "name": "sgReadyMode",
+                            "displayName": "Smart grid mode",
+                            "displayNameEvent": "Smart grid mode changed",
+                            "displayNameAction": "Set smart grid mode",
+                            "type": "QString",
+                            "possibleValues": [
+                                "Off",
+                                "Low",
+                                "Standard",
+                                "High"
+                            ],
+                            "defaultValue": "Standard",
+                            "writable": true,
+                            "cached": true,
+                            "suggestLogging": true
+                        },
+                        {
+                            "id": "df1dc666-c74d-4da8-b452-8cc9ce868040",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameEvent": "Current power consumption changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "suggestLogging": true
+                        },
+                        {
+                            "id": "62f944b0-2d7e-4ff8-bdb0-22da5853b88e",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed engery changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        }
+                    ]
+                },
+                {
+                    "id": "87850b78-db40-44c8-948c-363c0f85cd7c",
+                    "name": "simpleHeatPump",
+                    "displayName": "Simulated heat pump (simple)",
+                    "createMethods": ["user"],
+                    "interfaces": [ "simpleheatpump", "smartmeterconsumer" ],
+                    "settingsTypes": [
+                        {
+                            "id": "4967f3e3-1286-4a53-a3da-e36a2dbecb83",
+                            "name": "minConsumption",
+                            "displayName": "Minimal consumption",
+                            "unit": "Watt",
+                            "type": "uint",
+                            "defaultValue": 3000
+                        },
+                        {
+                            "id": "1132c814-62be-43f8-9760-2728e49010f3",
+                            "name": "maxConsumption",
+                            "displayName": "Maximal consumption",
+                            "unit": "Watt",
+                            "type": "uint",
+                            "defaultValue": 9000
+                        },
+                        {
+                            "id": "152a6440-d379-4046-a75e-4e9d1dfae75b",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "0bb02bdc-4bc8-4237-9953-99a236a654fd",
+                            "name": "power",
+                            "displayName": "Heat pump enabled",
+                            "displayNameEvent": "Heat pump enabled changed",
+                            "displayNameAction": "Enable/Disable heat pump",
+                            "type": "bool",
+                            "writable": true,
+                            "defaultValue": false,
+                            "cached": true,
+                            "ioType": "digitalInput",
+                            "suggestLogging": true
+                        },
+                        {
+                            "id": "a2370b7a-0f2a-475d-a945-a7a32957cf76",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameEvent": "Current power consumption changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "suggestLogging": true
+                        },
+                        {
+                            "id": "7da7a8fb-68a7-41da-9185-ac03d62a2af1",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed engery changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        }
+                    ]
                 }
             ]
         }
