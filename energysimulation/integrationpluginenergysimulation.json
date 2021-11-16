@@ -366,6 +366,13 @@
                             "type": "QString",
                             "allowedValues": ["A", "B", "C"],
                             "defaultValue": "A"
+                        },
+                        {
+                            "id": "1e10b7c3-7952-4f66-a3c6-58eed3e4d493",
+                            "name": "dailyUsageSimulation",
+                            "displayName": "Daily usage simulation",
+                            "type": "bool",
+                            "defaultValue": true
                         }
                     ],
                     "stateTypes": [

@@ -163,7 +163,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 
 void IntegrationPluginEnergySimulation::updateSimulation()
 {
-    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << QDate::currentDate().toString();
+    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << QDateTime::currentDateTime().toString();
 
     // Update solar inverters
     foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
@@ -244,6 +244,37 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
     // Update stove
     foreach (Thing *stove, myThings().filterByThingClassId(stoveThingClassId)) {
+        QDateTime now = QDateTime::currentDateTime();
+
+        if (stove->setting(stoveSettingsDailyUsageSimulationParamTypeId).toBool()) {
+            // If daily usage simulation is enabled, we use the stove for breakfest, lunch and dinner cooking
+            QDateTime breakfestTimeStart = QDateTime(now.date(), QTime::fromString("07:00", "HH:mm"));
+            QDateTime breakfestTimeEnd = breakfestTimeStart.addSecs(60 * 10); // Cook for 10 min a coffe
+
+            QDateTime lunchTimeStart = QDateTime(now.date(), QTime::fromString("11:50", "HH:mm"));
+            QDateTime lunchTimeEnd = lunchTimeStart.addSecs(60 * 20); // Cook for 20 min
+
+            QDateTime dinnerTimeStart = QDateTime(now.date(), QTime::fromString("18:10", "HH:mm"));
+            QDateTime dinnerTimeEnd = dinnerTimeStart.addSecs(60 * 30); // Cook for 30 min
+
+            bool dailyUsageSimulationPower = false;
+            if (now >= breakfestTimeStart && now < breakfestTimeEnd) {
+                qCDebug(dcEnergySimulation()) << "* Stove cooking breakfest until" << breakfestTimeEnd.time().toString();
+                dailyUsageSimulationPower = true;
+            } else if (now >= lunchTimeStart && now < lunchTimeEnd) {
+                qCDebug(dcEnergySimulation()) << "* Stove cooking lunch until" << lunchTimeEnd.time().toString();
+                dailyUsageSimulationPower = true;
+            } else if (now >= dinnerTimeStart && now < dinnerTimeEnd) {
+                qCDebug(dcEnergySimulation()) << "* Stove cooking dinner until" << dinnerTimeEnd.time().toString();
+                dailyUsageSimulationPower = true;
+            }
+
+            if (dailyUsageSimulationPower != stove->stateValue(stovePowerStateTypeId).toBool()) {
+                qCDebug(dcEnergySimulation()) << "Update stove power according to daily usage simulation" << dailyUsageSimulationPower;
+                stove->setStateValue(stovePowerStateTypeId, dailyUsageSimulationPower);
+            }
+        }
+
         if (stove->stateValue(stovePowerStateTypeId).toBool()) {
             int cycle = stove->property("simulationCycle").toInt() % 12;
             double maxPower = stove->setting(stoveSettingsMaxPowerConsumptionParamTypeId).toDouble();
@@ -257,6 +288,8 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             stove->setStateValue(stoveTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
             stove->setProperty("simulationCycle", cycle + 1);
             qCDebug(dcEnergySimulation()) << "* Stove using" << currentPower << "W";
+        } else {
+            stove->setStateValue(stoveCurrentPowerStateTypeId, 0);
         }
     }
 
