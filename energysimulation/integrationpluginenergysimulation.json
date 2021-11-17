@@ -72,8 +72,7 @@
                             "displayNameEvent": "Current power consumption changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "c296b36f-3d5a-48dc-8d1e-3686accd558b",
@@ -164,8 +163,7 @@
                             "displayNameEvent": "Current power production changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         }
                     ]
                 },
@@ -201,8 +199,7 @@
                             "displayNameEvent": "Current power consumption changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "738310b9-f562-4754-b02b-294f9a7d058c",
@@ -265,8 +262,7 @@
                             "displayNameEvent": "Current power usage changed (Phase A)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "3cf31a0b-d91d-4b1e-8fa6-6c322a71d43d",
@@ -275,8 +271,7 @@
                             "displayNameEvent": "Current power usage changed (Phase B)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "9e6369af-6431-4002-8669-0fb18f81ebf5",
@@ -285,8 +280,7 @@
                             "displayNameEvent": "Current power usage changed (Phase C)",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "158de792-0001-4f87-8903-f80ebbc65ac0",
@@ -402,8 +396,7 @@
                             "displayNameEvent": "Current power consumption changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         }
                     ]
                 },
@@ -528,8 +521,7 @@
                             "displayNameEvent": "Current power flow changed",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 0,
-                            "filter": "adaptive"
+                            "defaultValue": 0
                         },
                         {
                             "id": "c71f297c-adf2-4e22-8f15-e0996f7924f4",
