@@ -173,12 +173,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     // Update solar inverters
     foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
         QDateTime now = QDateTime::currentDateTime();
-<<<<<<< HEAD
         int hoursOffset = inverter->setting(solarInverterSettingsHoursOffsetParamTypeId).toInt();
-=======
-        int hoursOffset = inverter->paramValue(solarInverterSettingsHoursOffsetParamTypeId).toInt();
-        qCDebug(dcEnergySimulation()) << "Solar inverter offset:" << hoursOffset;
->>>>>>> 1ffcecb (Fix "now")
         now = now.addSecs(hoursOffset * 60 * 60);
 
         QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, now);
@@ -558,6 +553,16 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         smartMeter->setStateValue(smartMeterCurrentPowerPhaseBStateTypeId, totalPhasesConsumption["B"] + totalPhaseProduction["B"]);
         smartMeter->setStateValue(smartMeterCurrentPowerPhaseCStateTypeId, totalPhasesConsumption["C"] + totalPhaseProduction["C"]);
         smartMeter->setStateValue(smartMeterCurrentPowerStateTypeId, grandTotal);
+
+        smartMeter->setStateValue(smartMeterVoltagePhaseAStateTypeId, 230);
+        smartMeter->setStateValue(smartMeterVoltagePhaseBStateTypeId, 230);
+        smartMeter->setStateValue(smartMeterVoltagePhaseCStateTypeId, 230);
+
+        // Calculate ampere
+        smartMeter->setStateValue(smartMeterCurrentPhaseAStateTypeId, smartMeter->stateValue(smartMeterCurrentPowerPhaseAStateTypeId).toDouble() / 230);
+        smartMeter->setStateValue(smartMeterCurrentPhaseBStateTypeId, smartMeter->stateValue(smartMeterCurrentPowerPhaseBStateTypeId).toDouble() / 230);
+        smartMeter->setStateValue(smartMeterCurrentPhaseCStateTypeId, smartMeter->stateValue(smartMeterCurrentPowerPhaseCStateTypeId).toDouble() / 230);
+
 
         // Add up total consumed/returned
         // Transform current power to kWh for the last 5 secs (simulation interval)
