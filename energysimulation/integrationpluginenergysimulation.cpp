@@ -88,6 +88,11 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
             }
         });
     }
+
+    if (thing->thingClassId() == stoveThingClassId) {
+        // Init property for simulation
+        thing->setProperty("simulationActive", false);
+    }
 }
 
 
@@ -257,21 +262,22 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             QDateTime dinnerTimeStart = QDateTime(now.date(), QTime::fromString("18:10", "HH:mm"));
             QDateTime dinnerTimeEnd = dinnerTimeStart.addSecs(60 * 30); // Cook for 30 min
 
-            bool dailyUsageSimulationPower = false;
+            bool simulationActive = false;
             if (now >= breakfestTimeStart && now < breakfestTimeEnd) {
                 qCDebug(dcEnergySimulation()) << "* Stove cooking breakfest until" << breakfestTimeEnd.time().toString();
-                dailyUsageSimulationPower = true;
+                simulationActive = true;
             } else if (now >= lunchTimeStart && now < lunchTimeEnd) {
                 qCDebug(dcEnergySimulation()) << "* Stove cooking lunch until" << lunchTimeEnd.time().toString();
-                dailyUsageSimulationPower = true;
+                simulationActive = true;
             } else if (now >= dinnerTimeStart && now < dinnerTimeEnd) {
                 qCDebug(dcEnergySimulation()) << "* Stove cooking dinner until" << dinnerTimeEnd.time().toString();
-                dailyUsageSimulationPower = true;
+                simulationActive = true;
             }
 
-            if (dailyUsageSimulationPower != stove->stateValue(stovePowerStateTypeId).toBool()) {
-                qCDebug(dcEnergySimulation()) << "Update stove power according to daily usage simulation" << dailyUsageSimulationPower;
-                stove->setStateValue(stovePowerStateTypeId, dailyUsageSimulationPower);
+            if (stove->property("simulationActive").toBool() != simulationActive) {
+                stove->setProperty("simulationActive", simulationActive);
+                qCDebug(dcEnergySimulation()) << "Stove simulation changed to" << (simulationActive ? "active" : "inactive");
+                stove->setStateValue(stovePowerStateTypeId, simulationActive);
             }
         }
 
