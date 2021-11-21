@@ -65,22 +65,6 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergySimulation::updateSimulation);
     }
 
-    if (!m_totalsTimer) {
-        m_totalsTimer = hardwareManager()->pluginTimerManager()->registerTimer(60);
-        connect(m_totalsTimer, &PluginTimer::timeout, this, [=](){
-            foreach (Thing *smartMeter, m_pendingTotalConsumption.keys()) {
-                double totalEnergyConsumed = smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble();
-                smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, totalEnergyConsumed + m_pendingTotalConsumption.value(smartMeter));
-                m_pendingTotalConsumption[smartMeter] = 0;
-            }
-            foreach (Thing *smartMeter, m_pendingTotalProduction.keys()) {
-                double totalEnergyReturned = smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble();
-                smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned + m_pendingTotalProduction.value(smartMeter));
-                m_pendingTotalProduction[smartMeter] = 0;
-            }
-        });
-    }
-
     if (thing->thingClassId() == wallboxThingClassId) {
         connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
@@ -98,8 +82,7 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
 
 void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 {
-    m_pendingTotalConsumption.remove(thing);
-    m_pendingTotalProduction.remove(thing);
+    Q_UNUSED(thing)
 }
 
 void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
@@ -188,6 +171,10 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             double currentProduction = qCos(qDegreesToRadians(degrees)) * inverter->setting(solarInverterSettingsMaxCapacityParamTypeId).toDouble();
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << currentProduction << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, -currentProduction);
+            double totalEnergyProduced = inverter->stateValue(solarInverterTotalEnergyProducedStateTypeId).toDouble();
+            totalEnergyProduced += (currentProduction / 1000) / 60 / 60 * 5;
+            inverter->setStateValue(solarInverterTotalEnergyProducedStateTypeId, totalEnergyProduced);
+
         } else {
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << "0" << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, 0);
@@ -567,10 +554,11 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         // Add up total consumed/returned
         // Transform current power to kWh for the last 5 secs (simulation interval)
         double consumption = grandTotal / 1000 / 60 / 60 * 5;
+        qCDebug(dcEnergySimulation()) << "Total consumption on root meter" << consumption;
         if (grandTotal > 0) {
-            m_pendingTotalConsumption[smartMeter] += consumption;
+            smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble() + consumption);
         } else {
-            m_pendingTotalProduction[smartMeter] -= consumption;
+            smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble() - consumption);
         }
     }
 }
