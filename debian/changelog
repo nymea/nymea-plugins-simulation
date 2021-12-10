@@ -1,3 +1,21 @@
+nymea-plugins-simulation (0.29.1) xenial; urgency=medium
+
+  [ Michael Zanetti ]
+  * Add simulated battery
+  * Inverter hours offset param
+  * Import simulations from nymea-plugins
+
+  [ Simon Stürz ]
+  * Update simulated evcharger to new interface states
+  * EnergySimulation: Add heatpump simulations
+  * EnergySimulation: Introduce stove daily usage simulation for cooking
+  * EnergySimulation: Remove adative filters for power
+
+  [ Michael Zanetti ]
+  * Fix totals for energy calculation
+
+ -- Jenkins <jenkins@nymea.io>  Sat, 11 Dec 2021 00:32:31 +0100
+
 nymea-plugins-simulation (0.29.0) xenial; urgency=medium
 
   [ Michael Zanetti ]
