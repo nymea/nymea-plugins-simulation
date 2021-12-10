@@ -1,5 +1,5 @@
 {
-    "name": "energy",
+    "name": "energySimulation",
     "displayName": "nymea.energy simulation",
     "id": "9a3d179a-aff2-4b1a-a250-3d730dd82df3",
     "paramTypes": [
@@ -19,7 +19,7 @@
             "thingClasses": [
                 {
                     "name": "wallbox",
-                    "displayName": "nymea wallbox",
+                    "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["evcharger"],
@@ -31,6 +31,14 @@
                             "type": "QString",
                             "allowedValues": ["A", "B", "C", "All"],
                             "defaultValue": "A"
+                        },
+                        {
+                            "id": "b85d5c69-5d30-4b07-a86f-2e0dd5a3c1c1",
+                            "name": "maxChargingCurrentUpperLimit",
+                            "displayName": "Upper limit for maximum charging current",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 63
                         }
                     ],
                     "stateTypes":[
@@ -65,12 +73,39 @@
                             "type": "bool",
                             "defaultValue": false,
                             "cached": false
+                        },
+                        {
+                            "id": "e26730c0-dd42-4383-84e0-bda7051aa438",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed energy changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "015f5a5d-d67b-4cb0-81ce-4098c316c8ae",
+                            "name": "currentPower",
+                            "displayName": "Current power usage",
+                            "displayNameEvent": "Current power usage changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "filter": "adaptive"
+                        },
+                        {
+                            "id": "8a3b2acb-7665-4050-a039-f67a2ba3100f",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "displayNameEvent": "Charging changed",
+                            "type": "bool",
+                            "defaultValue": false
                         }
                     ]
                 },
                 {
                     "name": "solarInverter",
-                    "displayName": "nymea solar inverter",
+                    "displayName": "Simulated solar inverter",
                     "id": "f1e91782-8bc1-4bcb-a07e-e66b01fe7be5",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["solarinverter"],
@@ -116,7 +151,7 @@
                 },
                 {
                     "name": "smartMeter",
-                    "displayName": "nymea smart meter",
+                    "displayName": "Simulated smart meter",
                     "id": "d96c77e3-dbf1-4875-95a4-7ca85aa3ef8e",
                     "createMethods": ["discovery", "user"],
                     "interfaces": ["energymeter"],
@@ -292,7 +327,7 @@
                 {
                     "id": "51a34654-0e29-45ef-b361-305633838bf2",
                     "name": "stove",
-                    "displayName": "nymea stove",
+                    "displayName": "Simulated stove",
                     "createMethods": ["user"],
                     "interfaces": ["smartmeterconsumer"],
                     "settingsTypes": [
@@ -348,7 +383,7 @@
                 {
                     "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
                     "name": "car",
-                    "displayName": "nymea car",
+                    "displayName": "Simulated car",
                     "createMethods": ["user"],
                     "interfaces": ["electricvehicle"],
                     "stateTypes": [
@@ -391,6 +426,88 @@
                             "defaultValue": false,
                             "writable": true,
                             "cached": false
+                        }
+                    ]
+                },
+                {
+                    "id": "d691ccc4-acf7-428f-b6b2-30f36be10c7a",
+                    "name": "battery",
+                    "displayName": "Simulated battery",
+                    "createMethods": ["user"],
+                    "interfaces": ["energystorage"],
+                    "settingsTypes": [
+                        {
+                            "id": "4cf4f5b5-1602-4612-8f59-23ceff14c296",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 10
+                        },
+                        {
+                            "id": "5247a7c3-5ab2-49f7-a46e-e879607a3269",
+                            "name": "chargingRate",
+                            "displayName": "Charging rate",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 1000
+                        },
+                        {
+                            "id": "0c86ab12-5046-4a51-9ff1-675309eb3386",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C"],
+                            "defaultValue": "A"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "5acd3677-f4ea-4d57-b635-82cd75655807",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "displayNameEvent": "Battery entered or left critical state",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "8bef4c4b-5761-4a54-bd51-def76caaa514",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "displayNameEvent": "Battery level changed",
+                            "type": "int",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "unit": "Percentage",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "1d60bebe-c460-40b5-835e-9108105e4683",
+                            "name": "currentPower",
+                            "displayName": "Current power flow",
+                            "displayNameEvent": "Current power flow changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "filter": "adaptive"
+                        },
+                        {
+                            "id": "c71f297c-adf2-4e22-8f15-e0996f7924f4",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "displayNameEvent": "Charging state changed",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "b1d9c37c-6b59-44cc-9bbf-95458dc93c08",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "displayNameEvent": "Battery capacity changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 10
                         }
                     ]
                 }

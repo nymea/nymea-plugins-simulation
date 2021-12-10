@@ -47,7 +47,7 @@ void IntegrationPluginEnergySimulation::discoverThings(ThingDiscoveryInfo *info)
 {
     QTimer::singleShot(1000, info, [=]{
         ThingClass thingClass = IntegrationPlugin::thingClass(info->thingClassId());
-        for (uint i = 0; i < configValue(energyPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
+        for (uint i = 0; i < configValue(energySimulationPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
             ThingDescriptor descriptor(info->thingClassId(), thingClass.displayName());
             info->addThingDescriptor(descriptor);
         }
@@ -57,18 +57,44 @@ void IntegrationPluginEnergySimulation::discoverThings(ThingDiscoveryInfo *info)
 
 void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
 {
+    Thing *thing = info->thing();
     info->finish(Thing::ThingErrorNoError);
 
     if (!m_timer) {
         m_timer = hardwareManager()->pluginTimerManager()->registerTimer(5);
         connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergySimulation::updateSimulation);
     }
+
+    if (!m_totalsTimer) {
+        m_totalsTimer = hardwareManager()->pluginTimerManager()->registerTimer(60);
+        connect(m_totalsTimer, &PluginTimer::timeout, this, [=](){
+            foreach (Thing *smartMeter, m_pendingTotalConsumption.keys()) {
+                double totalEnergyConsumed = smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble();
+                smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, totalEnergyConsumed + m_pendingTotalConsumption.value(smartMeter));
+                m_pendingTotalConsumption[smartMeter] = 0;
+            }
+            foreach (Thing *smartMeter, m_pendingTotalProduction.keys()) {
+                double totalEnergyReturned = smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble();
+                smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned + m_pendingTotalProduction.value(smartMeter));
+                m_pendingTotalProduction[smartMeter] = 0;
+            }
+        });
+    }
+
+    if (thing->thingClassId() == wallboxThingClassId) {
+        connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value){
+            if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
+                thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
+            }
+        });
+    }
 }
 
 
 void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 {
-    Q_UNUSED(thing)
+    m_pendingTotalConsumption.remove(thing);
+    m_pendingTotalProduction.remove(thing);
 }
 
 void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
@@ -102,7 +128,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                     }
                 }
                 // No wallbox found where we could plug into... Failing action
-                info->finish(Thing::ThingErrorHardwareNotAvailable, "No wallbox free wallbox found");
+                info->finish(Thing::ThingErrorHardwareNotAvailable, "No free wallbox found");
                 return;
             } else {
                 info->thing()->setStateValue(carPluggedInStateTypeId, false);
@@ -124,13 +150,13 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 
 void IntegrationPluginEnergySimulation::updateSimulation()
 {
-    qCDebug(dcEnergy()) << "*******************  Adjusting simulation";
+    QDateTime now = QDateTime::currentDateTime().addSecs(-60*60*6);
+    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << now;
     // Update solar inverters
-    QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, QDateTime::currentDateTime());
+    QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, now);
     QDateTime sunrise = sunriseSunset.first;
     QDateTime sunset = sunriseSunset.second;
-    QDateTime now = QDateTime::currentDateTime();//.addSecs(-60*60*12);
-//    qCDebug(dcEnergy()) << "Sunrise:" << sunrise << "Sunset:" << sunset << "Now" << now;
+    qCDebug(dcEnergySimulation()) << "Sunrise:" << sunrise << "Sunset:" << sunset << "Now" << now;
     if (sunrise < now && now < sunset) {
         qlonglong msecsOfLight = sunriseSunset.second.toMSecsSinceEpoch() - sunriseSunset.first.toMSecsSinceEpoch();
         qlonglong currentMSecOfLight = now.toMSecsSinceEpoch() - sunrise.toMSecsSinceEpoch();
@@ -138,11 +164,12 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
         foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
             double currentProduction = qCos(qDegreesToRadians(degrees)) * inverter->setting(solarInverterSettingsMaxCapacityParamTypeId).toDouble();
-            qCDebug(dcEnergy()) << "* Inverter" << inverter->name() << "production:" << currentProduction << "W";
+            qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << currentProduction << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, -currentProduction);
         }
     } else {
         foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
+            qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << "0" << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, 0);
         }
     }
@@ -152,8 +179,9 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         if (evCharger->stateValue(wallboxPluggedInStateTypeId).toBool() && evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
             ThingId connectedCarThingId = evCharger->property("connectedCarThingId").toUuid();
             Thing *car = myThings().findById(connectedCarThingId);
-            qCDebug(dcEnergy()) << "* Evaluating wallbox:" << evCharger->name() << "Connected car:" << (car ? car->name() : "none");
+            qCDebug(dcEnergySimulation()) << "* Evaluating wallbox:" << evCharger->name() << "Connected car:" << (car ? car->name() : "none");
             if (car && car->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
+                evCharger->setStateValue(wallboxChargingStateTypeId, true);
                 QDateTime lastChargeUpdateTime = car->property("lastChargeUpdateTime").toDateTime();
                 if (lastChargeUpdateTime.isNull()) {
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
@@ -166,10 +194,12 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                 double carCapacity = car->stateValue(carCapacityStateTypeId).toDouble();
                 // cWH : cap = x : 100
                 double chargedPercentage = chargedWattHours / 1000 * 100 / carCapacity;
-                qCDebug(dcEnergy()) << "* #### Car charging info:";
-                qCDebug(dcEnergy()) << "* # max charging current:" << maxChargingCurrent;
-                qCDebug(dcEnergy()) << "* # time passed since last update:" << chargingTimeHours;
-                qCDebug(dcEnergy()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
+                qCDebug(dcEnergySimulation()) << "* #### Car charging info:";
+                qCDebug(dcEnergySimulation()) << "* # max charging current:" << maxChargingCurrent << "A";
+                qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
+                qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
+
+                evCharger->setStateValue(wallboxCurrentPowerStateTypeId, chargingPower);
 
                 if (chargedPercentage >= 1) {
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
@@ -177,7 +207,15 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     car->setStateValue(carBatteryLevelStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() + chargedPercentage);
                     car->setStateValue(carBatteryCriticalStateTypeId, car->stateValue(carBatteryLevelStateTypeId).toInt() < 10);
                 }
+            } else {
+                qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car already full)";
+                evCharger->setStateValue(wallboxChargingStateTypeId, false);
+                evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
             }
+        } else {
+            qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car not plugged in or charging disabled)";
+            evCharger->setStateValue(wallboxChargingStateTypeId, false);
+            evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
         }
     }
 
@@ -203,12 +241,11 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             stove->setStateValue(stoveCurrentPowerStateTypeId, currentPower);
             stove->setStateValue(stoveTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
             stove->setProperty("simulationCycle", cycle + 1);
+            qCDebug(dcEnergySimulation()) << "* Stove using" << currentPower << "W";
         }
     }
 
-    /////////////////////////////////////////////////////
-    /// Energy meter
-    ////////////////////////////////////////////////////
+
 
     // Sum up production from inverters
     QHash<QString, double> totalPhaseProduction = {
@@ -228,6 +265,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
+
     // Sum up consumption of all consumers
     QHash<QString, double> totalPhasesConsumption = {
         {"A", 0},
@@ -239,31 +277,20 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     totalPhasesConsumption["B"] += 100 + (qrand() % 10);
     totalPhasesConsumption["C"] += 100 + (qrand() % 10);
 
+
+
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
         // FIXME: energymeter should not inherit smartmeter*
-        if (consumer->thingClass().interfaces().contains("smartmeterconsumer") && !consumer->thingClass().interfaces().contains("energymeter")) {
+        if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
             QString phase = consumer->setting("phase").toString();
-            totalPhasesConsumption[phase] += consumer->stateValue("currentPower").toDouble();
-        }
-    }
-
-    // Add evchargers
-    foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
-        Thing *connectedCar = myThings().findById(evCharger->property("connectedCarThingId").toUuid());
-        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()
-                && evCharger->stateValue(wallboxPluggedInStateTypeId).toBool()
-                && connectedCar && connectedCar->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
-            double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
-            double currentConsumption = maxChargingCurrent * 230;
-            qCDebug(dcEnergy()) << "* Wallbox" << evCharger->name() << "consumes" << currentConsumption << "W";
-            QString phase = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString();
+            double currentPower = consumer->stateValue("currentPower").toDouble();
             if (phase == "All") {
-                totalPhasesConsumption["A"] += currentConsumption / 3;
-                totalPhasesConsumption["B"] += currentConsumption / 3;
-                totalPhasesConsumption["C"] += currentConsumption / 3;
+                totalPhasesConsumption["A"] += currentPower / 3;
+                totalPhasesConsumption["B"] += currentPower / 3;
+                totalPhasesConsumption["C"] += currentPower / 3;
             } else {
-                totalPhasesConsumption[phase] += currentConsumption;
+                totalPhasesConsumption[phase] += currentPower;
             }
         }
     }
@@ -280,11 +307,91 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     }
     double grandTotal = totalConsumption + totalProduction; // Note: production is negative
 
-    qCDebug(dcEnergy()) << "* Grand total power consumption:" << grandTotal << "W";
 
+    // Charge/discharge batteries depending on totals so far
+    foreach (Thing *battery, myThings().filterByThingClassId(batteryThingClassId)) {
+        int batteryLevel = battery->stateValue(batteryBatteryLevelStateTypeId).toInt();
+        QString phase = battery->setting(batterySettingsPhaseParamTypeId).toString();
+        double chargeRate = battery->setting(batterySettingsChargingRateParamTypeId).toDouble();
+
+        if (grandTotal < 0 && batteryLevel < 100) {
+            double chargedWatts = qMin(chargeRate, -grandTotal);
+            if (phase == "All") {
+                totalPhasesConsumption["A"] += chargedWatts / 3;
+                totalPhasesConsumption["B"] += chargedWatts / 3;
+                totalPhasesConsumption["C"] += chargedWatts / 3;
+            } else {
+                totalPhasesConsumption[phase] += chargedWatts;
+            }
+
+            battery->setStateValue(batteryChargingStateStateTypeId, "charging");
+            battery->setStateValue(batteryCurrentPowerStateTypeId, chargedWatts);
+
+            double pendingChargedWh = battery->property("pendingChargedWh").toDouble();
+            QDateTime lastUpdate = battery->property("lastUpdate").toDateTime();
+            double hoursSinceLastUpdate = 1.0 * lastUpdate.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
+            pendingChargedWh += chargedWatts * hoursSinceLastUpdate;
+            double whPerPercent = battery->setting(batterySettingsCapacityParamTypeId).toDouble() / 100 * 1000;
+            qCDebug(dcEnergySimulation()) << "* Charging battery with" << chargedWatts << "W";
+            if (pendingChargedWh > whPerPercent) {
+                battery->setStateValue(batteryBatteryLevelStateTypeId, batteryLevel + 1);
+                battery->setStateValue(batteryBatteryCriticalStateTypeId, batteryLevel < 10);
+                pendingChargedWh = 0;
+            }
+            battery->setProperty("pendingChargedWh", pendingChargedWh);
+            battery->setProperty("lastUpdate", QDateTime::currentDateTime());
+
+        } else if (grandTotal > 0 && batteryLevel > 0) {
+            double returnedWatts = qMin(chargeRate, grandTotal);
+            if (phase == "All") {
+                totalPhaseProduction["A"] += -returnedWatts / 3;
+                totalPhaseProduction["B"] += -returnedWatts / 3;
+                totalPhaseProduction["C"] += -returnedWatts / 3;
+            } else {
+                totalPhaseProduction[phase] += -returnedWatts;
+            }
+            battery->setStateValue(batteryChargingStateStateTypeId, "discharging");
+            battery->setStateValue(batteryCurrentPowerStateTypeId, -returnedWatts);
+
+
+            double pendingDischargedWh = battery->property("pendingDischargedWh").toDouble();
+            QDateTime lastUpdate = battery->property("lastUpdate").toDateTime();
+            double hoursSinceLastUpdate = 1.0 * lastUpdate.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
+            pendingDischargedWh += returnedWatts * hoursSinceLastUpdate;
+            double whPerPercent = battery->setting(batterySettingsCapacityParamTypeId).toDouble() / 100 * 1000;
+            qCDebug(dcEnergySimulation()) << "* Using from battery with" << returnedWatts << "W";
+            if (pendingDischargedWh > whPerPercent) {
+                battery->setStateValue(batteryBatteryLevelStateTypeId, batteryLevel - 1);
+                battery->setStateValue(batteryBatteryCriticalStateTypeId, batteryLevel < 10);
+                pendingDischargedWh = 0;
+            }
+            battery->setProperty("pendingDischargedWh", pendingDischargedWh);
+            battery->setProperty("lastUpdate", QDateTime::currentDateTime());
+
+        } else {
+            battery->setStateValue(batteryChargingStateStateTypeId, "idle");
+            battery->setStateValue(batteryCurrentPowerStateTypeId, 0);
+        }
+    }
+
+
+    // Sum up all phases *again* after the battery has been facored in
+    totalProduction = 0;
+    foreach (double phaseProduction, totalPhaseProduction) {
+        totalProduction += phaseProduction;
+    }
+    totalConsumption = 0;
+    foreach (double phaseConsumption, totalPhasesConsumption) {
+        totalConsumption += phaseConsumption;
+    }
+    grandTotal = totalConsumption + totalProduction; // Note: production is negative
+
+    qCDebug(dcEnergySimulation()) << "* Grand total power consumption:" << grandTotal << "W";
+
+    // Update the smart meter totals
     foreach (Thing *smartMeter, myThings().filterByThingClassId(smartMeterThingClassId)) {
         // First set current power consumptions
-        qCDebug(dcEnergy()) << "* Updating smart meter:" << smartMeter->name();
+        qCDebug(dcEnergySimulation()) << "* Updating smart meter:" << smartMeter->name();
         smartMeter->setStateValue(smartMeterCurrentPowerPhaseAStateTypeId, totalPhasesConsumption["A"] + totalPhaseProduction["A"]);
         smartMeter->setStateValue(smartMeterCurrentPowerPhaseBStateTypeId, totalPhasesConsumption["B"] + totalPhaseProduction["B"]);
         smartMeter->setStateValue(smartMeterCurrentPowerPhaseCStateTypeId, totalPhasesConsumption["C"] + totalPhaseProduction["C"]);
@@ -294,11 +401,9 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         // Transform current power to kWh for the last 5 secs (simulation interval)
         double consumption = grandTotal / 1000 / 60 / 60 * 5;
         if (grandTotal > 0) {
-            double totalEnergyConsumed = smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble();
-            smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, totalEnergyConsumed + consumption);
+            m_pendingTotalConsumption[smartMeter] += consumption;
         } else {
-            double totalEnergyReturned = smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble();
-            smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned - consumption);
+            m_pendingTotalProduction[smartMeter] -= consumption;
         }
     }
 }

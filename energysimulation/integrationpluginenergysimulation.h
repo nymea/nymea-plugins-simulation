@@ -60,6 +60,10 @@ private:
 
 private:
     PluginTimer *m_timer = nullptr;
+    PluginTimer *m_totalsTimer = nullptr;
+
+    QHash<Thing*, double> m_pendingTotalConsumption;
+    QHash<Thing*, double> m_pendingTotalProduction;
 };
 
 #endif // INTEGRATIONPLUGINENERGYSIMULATION_H
