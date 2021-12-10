@@ -114,7 +114,6 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
     }
     if (info->thing()->thingClassId() == carThingClassId) {
         if (info->action().actionTypeId() == carPluggedInActionTypeId) {
-
             if (info->action().paramValue(carPluggedInActionPluggedInParamTypeId).toBool()) {
                 // Try to plug the car to the first free wallbox
                 foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
@@ -143,6 +142,8 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                 info->finish(Thing::ThingErrorNoError);
                 return;
             }
+        } else if (info->action().actionTypeId() == carMinChargingCurrentActionTypeId) {
+            info->thing()->setStateValue(carMinChargingCurrentStateTypeId, info->action().paramValue(carMinChargingCurrentActionMinChargingCurrentParamTypeId));
         }
     }
     info->finish(Thing::ThingErrorNoError);
@@ -156,7 +157,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
         QDateTime now = QDateTime::currentDateTime();
         int hoursOffset = inverter->setting(solarInverterSettingsHoursOffsetParamTypeId).toInt();
-        qCDebug(dcEnergySimulation()) << "Solar inverter offset:" << hoursOffset;
         now = now.addSecs(hoursOffset * 60 * 60);
 
         QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, now);
@@ -190,7 +190,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
                     break;
                 }
-                double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
+                uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
                 double chargingPower = 230 * maxChargingCurrent;
                 double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
                 double chargedWattHours = chargingPower * chargingTimeHours;
@@ -284,7 +284,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
-        // FIXME: energymeter should not inherit smartmeter*
         if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
             QString phase = consumer->setting("phase").toString();
             double currentPower = consumer->stateValue("currentPower").toDouble();
