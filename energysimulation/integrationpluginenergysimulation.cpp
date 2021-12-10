@@ -150,25 +150,28 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 
 void IntegrationPluginEnergySimulation::updateSimulation()
 {
-    QDateTime now = QDateTime::currentDateTime().addSecs(-60*60*6);
-    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << now;
-    // Update solar inverters
-    QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, now);
-    QDateTime sunrise = sunriseSunset.first;
-    QDateTime sunset = sunriseSunset.second;
-    qCDebug(dcEnergySimulation()) << "Sunrise:" << sunrise << "Sunset:" << sunset << "Now" << now;
-    if (sunrise < now && now < sunset) {
-        qlonglong msecsOfLight = sunriseSunset.second.toMSecsSinceEpoch() - sunriseSunset.first.toMSecsSinceEpoch();
-        qlonglong currentMSecOfLight = now.toMSecsSinceEpoch() - sunrise.toMSecsSinceEpoch();
-        qreal degrees = (currentMSecOfLight * 180 / msecsOfLight) - 90;
+    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << QDate::currentDate().toString();
 
-        foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
+    // Update solar inverters
+    foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
+        QDateTime now = QDateTime::currentDateTime();
+        int hoursOffset = inverter->setting(solarInverterSettingsHoursOffsetParamTypeId).toInt();
+        qCDebug(dcEnergySimulation()) << "Solar inverter offset:" << hoursOffset;
+        now = now.addSecs(hoursOffset * 60 * 60);
+
+        QPair<QDateTime, QDateTime> sunriseSunset = calculateSunriseSunset(48, 10, now);
+        QDateTime sunrise = sunriseSunset.first;
+        QDateTime sunset = sunriseSunset.second;
+
+        if (sunrise < now && now < sunset) {
+            qlonglong msecsOfLight = sunriseSunset.second.toMSecsSinceEpoch() - sunriseSunset.first.toMSecsSinceEpoch();
+            qlonglong currentMSecOfLight = now.toMSecsSinceEpoch() - sunrise.toMSecsSinceEpoch();
+            qreal degrees = (currentMSecOfLight * 180 / msecsOfLight) - 90;
+
             double currentProduction = qCos(qDegreesToRadians(degrees)) * inverter->setting(solarInverterSettingsMaxCapacityParamTypeId).toDouble();
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << currentProduction << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, -currentProduction);
-        }
-    } else {
-        foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
+        } else {
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << "0" << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, 0);
         }
