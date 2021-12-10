@@ -65,22 +65,6 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergySimulation::updateSimulation);
     }
 
-    if (!m_totalsTimer) {
-        m_totalsTimer = hardwareManager()->pluginTimerManager()->registerTimer(60);
-        connect(m_totalsTimer, &PluginTimer::timeout, this, [=](){
-            foreach (Thing *smartMeter, m_pendingTotalConsumption.keys()) {
-                double totalEnergyConsumed = smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble();
-                smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, totalEnergyConsumed + m_pendingTotalConsumption.value(smartMeter));
-                m_pendingTotalConsumption[smartMeter] = 0;
-            }
-            foreach (Thing *smartMeter, m_pendingTotalProduction.keys()) {
-                double totalEnergyReturned = smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble();
-                smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, totalEnergyReturned + m_pendingTotalProduction.value(smartMeter));
-                m_pendingTotalProduction[smartMeter] = 0;
-            }
-        });
-    }
-
     if (thing->thingClassId() == wallboxThingClassId) {
         connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
@@ -98,8 +82,7 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
 
 void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 {
-    m_pendingTotalConsumption.remove(thing);
-    m_pendingTotalProduction.remove(thing);
+    Q_UNUSED(thing)
 }
 
 void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
@@ -188,6 +171,10 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             double currentProduction = qCos(qDegreesToRadians(degrees)) * inverter->setting(solarInverterSettingsMaxCapacityParamTypeId).toDouble();
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << currentProduction << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, -currentProduction);
+            double totalEnergyProduced = inverter->stateValue(solarInverterTotalEnergyProducedStateTypeId).toDouble();
+            totalEnergyProduced += (currentProduction / 1000) / 60 / 60 * 5;
+            inverter->setStateValue(solarInverterTotalEnergyProducedStateTypeId, totalEnergyProduced);
+
         } else {
             qCDebug(dcEnergySimulation()) << "* Inverter" << inverter->name() << "production:" << "0" << "W";
             inverter->setStateValue(solarInverterCurrentPowerStateTypeId, 0);
@@ -220,6 +207,10 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                 qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
 
                 evCharger->setStateValue(wallboxCurrentPowerStateTypeId, chargingPower);
+                double totalEnergyConsumed = evCharger->stateValue(wallboxTotalEnergyConsumedStateTypeId).toDouble();
+                totalEnergyConsumed += (chargingPower / 1000) / 60 / 60 * 5;
+                qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyConsumed << "kWh";
+                evCharger->setStateValue(wallboxTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
 
                 if (chargedPercentage >= 1) {
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
@@ -299,6 +290,63 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
+    // Update heat pumps
+    foreach (Thing *heatPump, myThings().filterByThingClassId(sgReadyHeatPumpThingClassId)) {
+        QString operatingMode = heatPump->stateValue(sgReadyHeatPumpSgReadyModeStateTypeId).toString();
+        QString phase = heatPump->setting(sgReadyHeatPumpSettingsPhaseParamTypeId).toString();
+        uint minConsumption = heatPump->setting(sgReadyHeatPumpSettingsMinConsumptionParamTypeId).toUInt();
+        uint maxConsumption = heatPump->setting(sgReadyHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
+        double currentPower = 0;
+        if (operatingMode == "Off") {
+            currentPower = 10  + (qrand() % 5); // We need some energy since only the pump is off, not the controller
+        } else if (operatingMode == "Low") {
+            currentPower = minConsumption + (qrand() % 20);
+        } else if (operatingMode == "Standard") {
+            // min + 60 % of the max min difference + 20W jitter
+            currentPower = minConsumption + (maxConsumption - minConsumption) * 0.6 + (qrand() % 20);
+        } else if (operatingMode == "High") {
+            currentPower = maxConsumption + (qrand() % 20); // 20W jitter
+        }
+
+        int cycle = heatPump->property("simulationCycle").toInt() % 12;
+        double totalEnergyConsumed = heatPump->stateValue(sgReadyHeatPumpTotalEnergyConsumedStateTypeId).toDouble();
+        if (cycle < 4)
+            totalEnergyConsumed += (currentPower / 1000) / 60 / 60 * 5;
+
+        heatPump->setProperty("simulationCycle", cycle + 1);
+
+        qCDebug(dcEnergySimulation()) << "* Heatpump" << heatPump->name() << "consumes" << currentPower << "W" << operatingMode << "Energy consumed" << totalEnergyConsumed << "kWh";
+        heatPump->setStateValue(sgReadyHeatPumpCurrentPowerStateTypeId, currentPower);
+        heatPump->setStateValue(sgReadyHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+    }
+    foreach (Thing *heatPump, myThings().filterByThingClassId(simpleHeatPumpThingClassId)) {
+        bool heatpumpEnabled = heatPump->stateValue(simpleHeatPumpPowerStateTypeId).toBool();
+        QString phase = heatPump->setting(simpleHeatPumpSettingsPhaseParamTypeId).toString();
+        //uint minConsumption = heatPump->setting(simpleHeatPumpSettingsMinConsumptionParamTypeId).toUInt();
+        uint maxConsumption = heatPump->setting(simpleHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
+        double currentPower = 0;
+        if (heatpumpEnabled) {
+            currentPower = maxConsumption - (qrand() % 50);
+        } else {
+            currentPower = qrand() % 50;
+        }
+
+        int cycle = heatPump->property("simulationCycle").toInt() % 12;
+        double totalEnergyConsumed = heatPump->stateValue(simpleHeatPumpTotalEnergyConsumedStateTypeId).toDouble();
+        if (cycle < 4)
+            totalEnergyConsumed += (currentPower / 1000) / 60 / 60 * 5;
+
+        heatPump->setProperty("simulationCycle", cycle + 1);
+
+        qCDebug(dcEnergySimulation()) << "* Heatpump" << heatPump->name() << "consumes" << currentPower << "W" << "Energy consumed" << totalEnergyConsumed << "kWh";
+        heatPump->setStateValue(simpleHeatPumpCurrentPowerStateTypeId, currentPower);
+        heatPump->setStateValue(simpleHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+    }
+
+
+    /////////////////////////////////////////////////////
+    /// Energy meter
+    ////////////////////////////////////////////////////
 
 
     // Sum up production from inverters
@@ -347,110 +395,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             }
         }
     }
-
-    // Add evchargers
-    foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
-        Thing *connectedCar = myThings().findById(evCharger->property("connectedCarThingId").toUuid());
-        if (evCharger->stateValue(wallboxPowerStateTypeId).toBool()
-                && evCharger->stateValue(wallboxPluggedInStateTypeId).toBool()
-                && connectedCar && connectedCar->stateValue(carBatteryLevelStateTypeId).toInt() < 100) {
-            uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
-            double currentConsumption = maxChargingCurrent * 230; // One phase
-
-            evCharger->setStateValue(wallboxChargingStateTypeId, true);
-
-            qCDebug(dcEnergySimulation()) << "* Wallbox" << evCharger->name() << "consumes" << currentConsumption << "W";
-            QString phase = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString();
-            if (phase == "All") {
-                totalPhasesConsumption["A"] += currentConsumption;
-                totalPhasesConsumption["B"] += currentConsumption;
-                totalPhasesConsumption["C"] += currentConsumption;
-                evCharger->setStateValue(wallboxPhaseCountStateTypeId, 3);
-            } else {
-                totalPhasesConsumption[phase] += currentConsumption;
-                evCharger->setStateValue(wallboxPhaseCountStateTypeId, 1);
-            }
-        } else {
-            evCharger->setStateValue(wallboxChargingStateTypeId, false);
-        }
-    }
-
-    /////////////////////////////////////////////////////
-    /// Heat pumps
-    ////////////////////////////////////////////////////
-
-    foreach (Thing *heatPump, myThings().filterByThingClassId(sgReadyHeatPumpThingClassId)) {
-        QString operatingMode = heatPump->stateValue(sgReadyHeatPumpSgReadyModeStateTypeId).toString();
-        QString phase = heatPump->setting(sgReadyHeatPumpSettingsPhaseParamTypeId).toString();
-        uint minConsumption = heatPump->setting(sgReadyHeatPumpSettingsMinConsumptionParamTypeId).toUInt();
-        uint maxConsumption = heatPump->setting(sgReadyHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
-        double currentPower = 0;
-        if (operatingMode == "Off") {
-            currentPower = 10  + (qrand() % 5); // We need some energy since only the pump is off, not the controller
-        } else if (operatingMode == "Low") {
-            currentPower = minConsumption + (qrand() % 20);
-        } else if (operatingMode == "Standard") {
-            // min + 60 % of the max min difference + 20W jitter
-            currentPower = minConsumption + (maxConsumption - minConsumption) * 0.6 + (qrand() % 20);
-        } else if (operatingMode == "High") {
-            currentPower = maxConsumption + (qrand() % 20); // 20W jitter
-        }
-
-        int cycle = heatPump->property("simulationCycle").toInt() % 12;
-        double totalEnergyConsumed = heatPump->stateValue(sgReadyHeatPumpTotalEnergyConsumedStateTypeId).toDouble();
-        if (cycle < 4)
-            totalEnergyConsumed += (currentPower / 1000) / 60 / 60 * 5;
-
-        heatPump->setProperty("simulationCycle", cycle + 1);
-
-        qCDebug(dcEnergySimulation()) << "* Heatpump" << heatPump->name() << "consumes" << currentPower << "W" << operatingMode << "Energy consumed" << totalEnergyConsumed << "kWh";
-        heatPump->setStateValue(sgReadyHeatPumpCurrentPowerStateTypeId, currentPower);
-        heatPump->setStateValue(sgReadyHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
-
-        if (phase == "All") {
-            totalPhasesConsumption["A"] += currentPower / 3.0;
-            totalPhasesConsumption["B"] += currentPower / 3.0;
-            totalPhasesConsumption["C"] += currentPower / 3.0;
-        } else {
-            totalPhasesConsumption[phase] += currentPower;
-        }
-    }
-
-    foreach (Thing *heatPump, myThings().filterByThingClassId(simpleHeatPumpThingClassId)) {
-        bool heatpumpEnabled = heatPump->stateValue(simpleHeatPumpPowerStateTypeId).toBool();
-        QString phase = heatPump->setting(simpleHeatPumpSettingsPhaseParamTypeId).toString();
-        //uint minConsumption = heatPump->setting(simpleHeatPumpSettingsMinConsumptionParamTypeId).toUInt();
-        uint maxConsumption = heatPump->setting(simpleHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
-        double currentPower = 0;
-        if (heatpumpEnabled) {
-            currentPower = maxConsumption - (qrand() % 50);
-        } else {
-            currentPower = qrand() % 50;
-        }
-
-        int cycle = heatPump->property("simulationCycle").toInt() % 12;
-        double totalEnergyConsumed = heatPump->stateValue(simpleHeatPumpTotalEnergyConsumedStateTypeId).toDouble();
-        if (cycle < 4)
-            totalEnergyConsumed += (currentPower / 1000) / 60 / 60 * 5;
-
-        heatPump->setProperty("simulationCycle", cycle + 1);
-
-        qCDebug(dcEnergySimulation()) << "* Heatpump" << heatPump->name() << "consumes" << currentPower << "W" << "Energy consumed" << totalEnergyConsumed << "kWh";
-        heatPump->setStateValue(simpleHeatPumpCurrentPowerStateTypeId, currentPower);
-        heatPump->setStateValue(simpleHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
-
-        if (phase == "All") {
-            totalPhasesConsumption["A"] += currentPower / 3.0;
-            totalPhasesConsumption["B"] += currentPower / 3.0;
-            totalPhasesConsumption["C"] += currentPower / 3.0;
-        } else {
-            totalPhasesConsumption[phase] += currentPower;
-        }
-    }
-
-    /////////////////////////////////////////////////////
-    /// Total
-    ////////////////////////////////////////////////////
 
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
@@ -567,10 +511,11 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         // Add up total consumed/returned
         // Transform current power to kWh for the last 5 secs (simulation interval)
         double consumption = grandTotal / 1000 / 60 / 60 * 5;
+        qCDebug(dcEnergySimulation()) << "Total consumption on root meter" << consumption;
         if (grandTotal > 0) {
-            m_pendingTotalConsumption[smartMeter] += consumption;
+            smartMeter->setStateValue(smartMeterTotalEnergyConsumedStateTypeId, smartMeter->stateValue(smartMeterTotalEnergyConsumedStateTypeId).toDouble() + consumption);
         } else {
-            m_pendingTotalProduction[smartMeter] -= consumption;
+            smartMeter->setStateValue(smartMeterTotalEnergyProducedStateTypeId, smartMeter->stateValue(smartMeterTotalEnergyProducedStateTypeId).toDouble() - consumption);
         }
     }
 }
