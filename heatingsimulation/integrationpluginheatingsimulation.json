@@ -1,6 +1,6 @@
 {
-    "name": "celsios",
-    "displayName": "CELSIOS",
+    "name": "heatingSimulation",
+    "displayName": "Heating simulation",
     "id": "2ede54db-60f3-47dd-9718-fe33784a76fe",
     "vendors": [
         {
@@ -8,6 +8,99 @@
             "displayName": "nymea",
             "id": "2062d64d-3232-433c-88bc-0d33c0ba2ba6",
             "thingClasses": [
+                {
+                    "id": "62e302f4-b92a-4b55-bd18-a1e0cc56362a",
+                    "name": "heating",
+                    "displayName": "Simple heater",
+                    "createMethods": ["user"],
+                    "interfaces": ["heating"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "e1910c53-a6bc-434b-9caa-0d08e214c122",
+                            "name": "power",
+                            "displayName": "Power",
+                            "displayNameEvent": "Power changed",
+                            "displayNameAction": "Set power",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true
+                        },
+                        {
+                            "id": "1302cb53-ccdc-49eb-88b6-85659c7d11b8",
+                            "name": "percentage",
+                            "displayName": "Percentage",
+                            "displayNameEvent": "Percentage changed",
+                            "displayNameAction": "Set percentage",
+                            "type": "int",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "unit": "Percentage",
+                            "defaultValue": 100,
+                            "writable": true,
+                            "unit": "Percentage"
+                        }
+                    ]
+                },
+                {
+                    "id": "227da953-e476-4c31-b3f6-fdd389bb1b7c",
+                    "name": "thermostat",
+                    "displayName": "Thermostat",
+                    "createMethods": ["user"],
+                    "interfaces": ["thermostat"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "edc0ccb6-3a78-44b9-8c7d-638142c27e10",
+                            "name": "targetTemperature",
+                            "displayName": "Target temperature",
+                            "displayNameEvent": "Target temperature changed",
+                            "displayNameAction": "Set target temperature",
+                            "type": "double",
+                            "unit": "DegreeCelsius",
+                            "defaultValue": 21,
+                            "minValue": 5,
+                            "maxValue": 35,
+                            "writable": true
+                        },
+                        {
+                            "id": "f3df52f0-ee1d-4163-a7b5-95d8f22b8841",
+                            "name": "temperature",
+                            "displayName": "Current temperature",
+                            "displayNameEvent": "Current temperature changed",
+                            "type": "double",
+                            "unit": "DegreeCelsius",
+                            "defaultValue": 18
+                        },
+                        {
+                            "id": "94a7d50c-df3b-4590-a89e-9dae40ad84fa",
+                            "name": "heatingOn",
+                            "displayName": "Heating on",
+                            "displayNameEvent": "Heating turned on/off",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "4c696205-392a-45ed-aab5-3b7f97ddf286",
+                            "name": "coolingOn",
+                            "displayName": "Cooling on",
+                            "displayNameEvent": "Cooling turned on/off",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "f892f660-87ff-458a-bfa0-5af08591233e",
+                            "name": "boost",
+                            "displayName": "Boost",
+                            "displayNameEvent": "Boost enabled changed",
+                            "displayNameAction": "Enable/disable boost",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true
+                        }
+
+                    ]
+                },
                 {
                     "name": "x2lu",
                     "displayName": "X2 LU",

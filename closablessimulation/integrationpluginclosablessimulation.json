@@ -1,0 +1,317 @@
+{
+    "name": "ClosablesSimulation",
+    "displayName": "Closables simulation",
+    "id": "a06cf012-d04d-4d8a-b655-b3b4e8d6d24f",
+    "vendors": [
+        {
+            "name": "nymea",
+            "displayName": "nymea Gmbh",
+            "id": "2062d64d-3232-433c-88bc-0d33c0ba2ba6",
+            "thingClasses": [
+                {
+                    "id": "cfb44bcf-b4b9-4bef-89f7-3a55baf35668",
+                    "name": "garageGate",
+                    "displayName": "Garage gate",
+                    "createMethods": ["user"],
+                    "interfaces": [ "garagegate", "light" ],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "f786029d-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "state",
+                            "displayName": "Garage gate state",
+                            "displayNameEvent": "Garage gate state changed",
+                            "type": "QString",
+                            "possibleValues": ["open", "closed", "opening", "closing"],
+                            "defaultValue": "open"
+                        },
+                        {
+                            "id": "324150cc-0357-4797-a746-37b554d82c44",
+                            "name": "intermediatePosition",
+                            "displayName": "Intermediate position",
+                            "displayNameEvent": "Intermediate position changed",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "46543561-2690-4072-a6a3-795e1c4f49a8",
+                            "name": "power",
+                            "displayName": "Light power",
+                            "displayNameEvent": "Light power changed",
+                            "displayNameAction": "Set light power",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "1786029d-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "2786029d-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "stop",
+                            "displayName": "Stop"
+                        },
+                        {
+                            "id": "3786029d-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "close",
+                            "displayName": "Close"
+                        }
+                    ]
+                },
+                {
+                    "id": "a13c14f1-361e-4aad-8785-c04b094fb19a",
+                    "name": "simpleBlind",
+                    "displayName": "Simple blind",
+                    "createMethods": ["user"],
+                    "interfaces": ["blind"],
+                    "actionTypes": [
+                        {
+                            "id": "06b99eb1-c3b6-4bea-95cf-690078297206",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "7f1bdeef-a57c-4b82-80ad-e3e31f16027f",
+                            "name": "stop",
+                            "displayName": "stop"
+                        },
+                        {
+                            "id": "0c55d32d-c916-472b-a03e-66fe7115e85d",
+                            "name": "close",
+                            "displayName": "close"
+                        }
+                    ]
+                },
+                {
+                    "id": "1d7aaa1d-fc50-4d7b-9657-1449322e40d8",
+                    "name": "extendedBlind",
+                    "displayName": "Extended blind",
+                    "createMethods": ["user"],
+                    "interfaces": ["extendedblind"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "18fc257c-6b7b-472c-b52a-acd4ba405bf2",
+                            "name": "percentage",
+                            "displayName": "percentage",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "displayNameEvent": "percentage changed",
+                            "writable": true,
+                            "displayNameAction": "set percentage",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "83559182-f3db-4a4a-8c70-d5fb3ceb57de",
+                            "name": "moving",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "displayName": "moving",
+                            "displayNameEvent": "moving changed"
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "b4379ab7-5fc2-45b6-8214-5855b040ee1a",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "fd63d8bf-ffde-4343-bbdc-1645c94017dc",
+                            "name": "stop",
+                            "displayName": "stop"
+                        },
+                        {
+                            "id": "316c17e6-01a8-45c4-921d-7773b2d441a4",
+                            "name": "close",
+                            "displayName": "close"
+                        }
+                    ]
+                },
+                {
+                    "id": "38757fee-ac55-403e-be53-bad5b97364c1",
+                    "name": "venetianBlind",
+                    "displayName": "Venetian blind",
+                    "createMethods": ["user"],
+                    "interfaces": ["venetianblind"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "16453cde-15c9-4133-a4fd-7da76735778c",
+                            "name": "percentage",
+                            "displayName": "percentage",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "displayNameEvent": "percentage changed",
+                            "writable": true,
+                            "displayNameAction": "set percentage",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "9dedaf04-3570-403e-b083-ec59dd08981a",
+                            "name": "moving",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "displayName": "moving",
+                            "displayNameEvent": "moving changed"
+                        },
+                        {
+                            "id": "fe3c802d-253f-4594-b64c-14a8870d9828",
+                            "name": "angle",
+                            "type": "int",
+                            "displayName": "Angle",
+                            "displayNameEvent": "Angle changed",
+                            "displayNameAction": "Set angle",
+                            "minValue": -90,
+                            "maxValue": 90,
+                            "defaultValue": 0,
+                            "unit": "Degree",
+                            "writable": true
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "4347b46b-4048-4f3a-b45d-71d99c15c30d",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "06be8ad4-24e5-4c03-9502-cda165a01bc4",
+                            "name": "stop",
+                            "displayName": "stop"
+                        },
+                        {
+                            "id": "61cadeae-810e-43f5-a6b5-e85fcaefde9c",
+                            "name": "close",
+                            "displayName": "close"
+                        }
+                    ]
+                },
+                {
+                    "id": "d302630b-f331-4bb0-88e4-4078f16aba7f",
+                    "name": "extendedAwning",
+                    "displayName": "Extended awning",
+                    "createMethods": ["user"],
+                    "interfaces": ["extendedawning"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "e4c92da3-da3e-40ea-907f-a93283426789",
+                            "name": "percentage",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "writable": true,
+                            "displayName": "percentage",
+                            "displayNameEvent": "percentage changed",
+                            "displayNameAction": "set percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "b2a888b3-c526-410f-bafc-9d6dc459dbf8",
+                            "name": "moving",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "displayName": "mooving",
+                            "displayNameEvent": "moving changed"
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "508c8f1b-aa1d-43d8-badb-0c9d219025b3",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "41fdeba2-8d2f-46ce-8f2d-b8c31bdf90ff",
+                            "name": "stop",
+                            "displayName": "stop"
+                        },
+                        {
+                            "id": "79ec0271-5361-4f0f-a458-bf22e570c9ac",
+                            "name": "close",
+                            "displayName": "close"
+                        }
+                    ]
+                },
+                {
+                    "id": "5f4e3fc9-afb1-45d0-86a2-8713d5894aee",
+                    "name": "simpleShutter",
+                    "displayName": "Simple roller shutter",
+                    "createMethods": ["user"],
+                    "interfaces": ["shutter"],
+                    "actionTypes": [
+                        {
+                            "id": "20259935-c39b-42d3-888b-ffdb98800a8d",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "b1f9b62a-1987-4d2b-af88-e64710cbf626",
+                            "name": "close",
+                            "displayName": "Close"
+                        },
+                        {
+                            "id": "7c310908-75ee-47b2-b2c1-90b85eed4694",
+                            "name": "stop",
+                            "displayName": "Stop"
+                        }
+                    ]
+                },
+                {
+                    "id": "1039b7ee-5351-400b-a477-5b8fc1447138",
+                    "name": "rollerShutter",
+                    "displayName": "Roller Shutter",
+                    "createMethods": ["user"],
+                    "interfaces": ["extendedshutter"],
+                    "paramTypes": [ ],
+                    "stateTypes": [
+                        {
+                            "id": "1386029d-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "percentage",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "writable": true,
+                            "displayName": "percentage",
+                            "displayNameEvent": "percentage changed",
+                            "displayNameAction": "set percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "fd94b07d-4631-450d-9f99-9e9221cc3602",
+                            "name": "moving",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "displayName": "mooving",
+                            "displayNameEvent": "moving changed"
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "17860291-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "open",
+                            "displayName": "Open"
+                        },
+                        {
+                            "id": "27860292-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "stop",
+                            "displayName": "stop"
+                        },
+                        {
+                            "id": "37860293-f3a6-4b47-978a-ac1a581aac0f",
+                            "name": "close",
+                            "displayName": "close"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

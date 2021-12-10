@@ -11,17 +11,23 @@ Build-depends: debhelper (>= 0.0.0),
 Standards-Version: 3.9.3
 
 
-Package: nymea-plugin-heating-simulation
+Package: nymea-plugin-appliances-simulation
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          nymea-plugins-translations,
-Conflicts: nymea-plugin-celsios
-Replaces: nymea-plugin-celsios
-Description: nymea.io simulation plugin for the Celsi°s experience
- This plugin simulates heating pump systems with a heating unit and a
- ventilation unit and works with the Celsi°s experience in nymea:app
+Description: nymea.io simulation plugin for appliances
+ This plugin simulates household appliances such as dish washers or cleaning robots.
+
+Package: nymea-plugin-closables-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         nymea-plugins-translations,
+Description: nymea.io simulation plugin for things that can be opened and closed.
+ This plugin simulates closable devices such as blinds, shutters, awnings and garages.
 
 Package: nymea-plugin-energy-simulation
 Architecture: any
@@ -29,6 +35,27 @@ Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          nymea-plugins-translations,
-Description: nymea.io simulation plugin for the nymea.energy experience
+Description: nymea.io simulation plugin for energy use cases
  This plugin simulates energy related devices such as solar inverters,
  evchargers, energy meters and several other consumers.
+
+Package: nymea-plugin-heating-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         nymea-plugins-translations,
+Description: nymea.io simulation plugin for heating use cases
+ This plugin simulates heating devices and systems such as smiple heating rods,
+ thermostats and heat pumps
+
+Package: nymea-plugin-sensors-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         nymea-plugins-translations,
+Description: nymea.io simulation plugin for sensors
+ This plugin simulates sensors such as temperature- and humidity sensors,
+ motion sensors etc.
+

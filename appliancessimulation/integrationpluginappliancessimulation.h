@@ -28,43 +28,49 @@
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef INTEGRATIONPLUGINHEATINGSIMULATION_H
-#define INTEGRATIONPLUGINHEATINGSIMULATION_H
+#ifndef INTEGRATIONPLUGINSIMMULATION_H
+#define INTEGRATIONPLUGINSIMMULATION_H
 
 #include "integrations/integrationplugin.h"
+#include "plugintimer.h"
+
+#include <QDateTime>
 
 #include "extern-plugininfo.h"
 
-#include <QTimer>
-
-class PluginTimer;
-
-class IntegrationPluginHeatingSimulation: public IntegrationPlugin
+class IntegrationPluginAppliancesSimulation : public IntegrationPlugin
 {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginheatingsimulation.json")
+    Q_PLUGIN_METADATA(IID "io.nymea.IntegrationPlugin" FILE "integrationpluginappliancessimulation.json")
     Q_INTERFACES(IntegrationPlugin)
 
+
 public:
-    explicit IntegrationPluginHeatingSimulation(QObject *parent = nullptr);
-    ~IntegrationPluginHeatingSimulation();
+    explicit IntegrationPluginAppliancesSimulation();
+    ~IntegrationPluginAppliancesSimulation();
 
     void init() override;
-    void startMonitoringAutoThings() override;
     void setupThing(ThingSetupInfo *info) override;
     void thingRemoved(Thing *thing) override;
     void executeAction(ThingActionInfo *info) override;
 
-private slots:
-    void onPluginTimer20Seconds();
-    void onPluginTimer1Minute();
-    void simulationTimerTimeout();
-
 private:
     PluginTimer *m_pluginTimer20Seconds = nullptr;
-    PluginTimer *m_pluginTimer1Min = nullptr;
+
+    int generateRandomIntValue(int min, int max);
+    double generateRandomDoubleValue(double min, double max);
+    bool generateRandomBoolValue();
+
+    // Generates values in a sin curve from min to max, moving the start by hourOffset from midnight
+    qreal generateSinValue(int min, int max, int hourOffset, int decimals = 2);
+    qreal generateBatteryValue(int chargeStartHour, int chargeDurationInMinutes);
+
     QHash<Thing*, QTimer*> m_simulationTimers;
+private slots:
+    void onPluginTimer20Seconds();
+    void simulationTimerTimeout();
+
 };
 
-#endif // INTEGRATIONPLUGINHEATINGSIMULATION_H
+#endif // INTEGRATIONPLUGINSIMMULATION_H
