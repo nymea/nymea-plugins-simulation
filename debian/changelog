@@ -1,3 +1,9 @@
+nymea-plugins-simulation (0.30.0) xenial; urgency=medium
+
+  * Bump version
+
+ -- Michael Zanetti <michael.zanetti@nymea.io>  Sat, 18 Dec 2021 10:25:25 +0100
+
 nymea-plugins-simulation (0.29.1) xenial; urgency=medium
 
   [ Michael Zanetti ]
