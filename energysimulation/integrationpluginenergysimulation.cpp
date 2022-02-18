@@ -136,7 +136,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
     }
     if (info->thing()->thingClassId() == sgReadyHeatPumpThingClassId) {
         if (info->action().actionTypeId() == sgReadyHeatPumpSgReadyModeActionTypeId) {
-            QString operatingMode = info->action().paramValue(sgReadyHeatPumpSgReadyModeEventSgReadyModeParamTypeId).toString();
+            QString operatingMode = info->action().paramValue(sgReadyHeatPumpSgReadyModeActionSgReadyModeParamTypeId).toString();
             info->thing()->setStateValue(sgReadyHeatPumpSgReadyModeActionTypeId, operatingMode);
         }
     } else if (info->thing()->thingClassId() == simpleHeatPumpThingClassId) {
