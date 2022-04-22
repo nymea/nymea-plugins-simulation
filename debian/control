@@ -5,7 +5,6 @@ Maintainer: Michael Zanetti <michael.zanetti@nymea.io>
 Build-depends: debhelper (>= 0.0.0),
                libnymea-dev (>= 0.29~),
                pkg-config,
-               python:any,
                qtbase5-dev,
                nymea-dev-tools:native,
 Standards-Version: 3.9.3
