@@ -401,6 +401,51 @@
                     ]
                 },
                 {
+                    "id": "be175640-c2eb-462c-87ec-45d29ec120cd",
+                    "name": "fridge",
+                    "displayName": "Simulated fridge",
+                    "createMethods": ["user"],
+                    "interfaces": ["smartmeterconsumer"],
+                    "settingsTypes": [
+                        {
+                            "id": "b4a04537-f57b-4bc5-89b7-5d67fc5b7f29",
+                            "name": "maxPowerConsumption",
+                            "displayName": "Maximum power consumption",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 84
+                        },
+                        {
+                            "id": "654c17bf-8de1-4853-bbc6-46cd702e331a",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C"],
+                            "defaultValue": "A"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "ba2db56d-b789-4229-bde2-b5fb7a5f1261",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "displayNameEvent": "Total consumed engery changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "95e4d048-dd81-4dcf-8a6f-c76d7e9bfb4d",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameEvent": "Current power consumption changed",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        }
+                    ]
+                },
+                {
                     "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
                     "name": "car",
                     "displayName": "Simulated car",
