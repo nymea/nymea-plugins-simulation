@@ -77,6 +77,9 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         // Init property for simulation
         thing->setProperty("simulationActive", false);
     }
+    if (thing->thingClassId() == fridgeThingClassId) {
+        thing->setProperty("simulationCycle", qrand() % 360);
+    }
 }
 
 
@@ -288,6 +291,20 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         } else {
             stove->setStateValue(stoveCurrentPowerStateTypeId, 0);
         }
+    }
+
+    foreach (Thing *fridge, myThings().filterByThingClassId(fridgeThingClassId)) {
+        int cycle = fridge->property("simulationCycle").toInt() % 900;
+        if (cycle < 360) {
+            double maxPower = fridge->setting(fridgeSettingsMaxPowerConsumptionParamTypeId).toDouble();
+            double totalEnergyConsumed = fridge->stateValue(fridgeTotalEnergyConsumedStateTypeId).toDouble();
+            totalEnergyConsumed += (maxPower / 1000) / 60 / 60 * 5;
+            fridge->setStateValue(fridgeCurrentPowerStateTypeId, maxPower);
+            fridge->setStateValue(fridgeTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+        } else {
+            fridge->setStateValue(fridgeCurrentPowerStateTypeId, 0);
+        }
+        fridge->setProperty("simulationCycle", cycle + 1);
     }
 
     // Update heat pumps
