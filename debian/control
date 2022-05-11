@@ -15,7 +15,6 @@ Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         nymea-plugins-translations,
 Description: nymea.io simulation plugin for appliances
  This plugin simulates household appliances such as dish washers or cleaning robots.
 
@@ -24,7 +23,6 @@ Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         nymea-plugins-translations,
 Description: nymea.io simulation plugin for things that can be opened and closed.
  This plugin simulates closable devices such as blinds, shutters, awnings and garages.
 
@@ -33,7 +31,6 @@ Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         nymea-plugins-translations,
 Description: nymea.io simulation plugin for energy use cases
  This plugin simulates energy related devices such as solar inverters,
  evchargers, energy meters and several other consumers.
@@ -43,7 +40,6 @@ Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         nymea-plugins-translations,
 Description: nymea.io simulation plugin for heating use cases
  This plugin simulates heating devices and systems such as smiple heating rods,
  thermostats and heat pumps
@@ -53,7 +49,6 @@ Architecture: any
 Section: libs
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         nymea-plugins-translations,
 Description: nymea.io simulation plugin for sensors
  This plugin simulates sensors such as temperature- and humidity sensors,
  motion sensors etc.
