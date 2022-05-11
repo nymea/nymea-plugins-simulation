@@ -22,7 +22,7 @@
                     "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
-                    "interfaces": ["evcharger"],
+                    "interfaces": ["evcharger", "smartmeterconsumer"],
                     "settingsTypes": [
                         {
                             "id": "73df6376-2495-4d61-a832-6de922528c6a",
