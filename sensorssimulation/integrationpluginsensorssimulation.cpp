@@ -106,6 +106,9 @@ void IntegrationPluginSensorsSimulation::executeAction(ThingActionInfo *info)
         if (action.actionTypeId() == fingerPrintSensorAddUserActionTypeId) {
             QStringList users = thing->stateValue(fingerPrintSensorUsersStateTypeId).toStringList();
             QString username = action.param(fingerPrintSensorAddUserActionUserIdParamTypeId).value().toString();
+            if (username.isEmpty()) {
+                username = "unknown";
+            }
             QString finger = action.param(fingerPrintSensorAddUserActionFingerParamTypeId).value().toString();
             QSettings settings;
             settings.beginGroup(thing->id().toString());
