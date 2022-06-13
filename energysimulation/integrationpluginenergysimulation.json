@@ -447,8 +447,8 @@
                 },
                 {
                     "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
-                    "name": "car",
-                    "displayName": "Simulated car",
+                    "name": "apiCar",
+                    "displayName": "Simulated car (with API)",
                     "createMethods": ["user"],
                     "interfaces": ["electricvehicle"],
                     "stateTypes": [
@@ -478,8 +478,7 @@
                             "unit": "Percentage",
                             "minValue": 0,
                             "maxValue": 100,
-                            "defaultValue": 0,
-                            "cached": false
+                            "defaultValue": 0
                         },
                         {
                             "id": "6a47ad6a-5936-4cd7-9200-cfc31ee556c3",
@@ -504,6 +503,100 @@
                             "maxValue": 16,
                             "defaultValue": 6,
                             "writable": true
+                        },
+                        {
+                            "id": "3cd39a7b-6b27-4f07-aa08-60f93799763d",
+                            "name": "phaseCount",
+                            "displayName": "Phase count",
+                            "displayNameEvent": "Phase count changed",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 3
+                        }
+                    ]
+                },
+                {
+                    "id": "4afcafb1-d341-4532-8062-738cae529cb5",
+                    "name": "genericCar",
+                    "displayName": "Simulated generic car",
+                    "createMethods": ["user"],
+                    "interfaces": ["electricvehicle"],
+                    "settingsTypes": [
+                        {
+                            "id": "d63053aa-ac59-4e15-95b5-67ec2c73798d",
+                            "name": "phaseCount",
+                            "displayName": "Phase count",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 3
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "1c7e2536-19b9-4b3e-ac11-8d4435ce4481",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "displayNameEvent": "Battery capacity changed",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 50
+                        },
+                        {
+                            "id": "c5238a7d-b7b3-4cac-a96e-77021c180989",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "displayNameEvent": "Battery eneterd or left critical state",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "623e24b7-e692-403c-8bd9-a73b7af77106",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "displayNameEvent": "Battery level changed",
+                            "displayNameAction": "Set battery level",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0,
+                            "writable": true
+                        },
+                        {
+                            "id": "d58f8dc2-a447-4ca0-9074-636a3d61ffdd",
+                            "name": "pluggedIn",
+                            "displayName": "Plugged in",
+                            "displayNameEvent": "Plugged/unplugged",
+                            "displayNameAction": "Plug/unplug",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "writable": true,
+                            "cached": false
+                        },
+                        {
+                            "id": "cca1ed26-1e33-44d2-9408-bdc7c7aa2742",
+                            "name": "minChargingCurrent",
+                            "displayName": "Minimal charging current",
+                            "displayNameEvent": "Minimal charging current changed",
+                            "displayNameAction": "Set minimal charging current",
+                            "type": "uint",
+                            "unit": "Ampere",
+                            "minValue": 6,
+                            "maxValue": 16,
+                            "defaultValue": 6,
+                            "writable": true
+                        },
+                        {
+                            "id": "0b43d669-9c0f-448f-8503-02958c6640e1",
+                            "name": "phaseCount",
+                            "displayName": "Phase count",
+                            "displayNameEvent": "Phase count changed",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 3
                         }
                     ]
                 },
