@@ -30,7 +30,7 @@
                             "displayName": "Connected on phase",
                             "type": "QString",
                             "allowedValues": ["A", "B", "C", "All"],
-                            "defaultValue": "A"
+                            "defaultValue": "All"
                         },
                         {
                             "id": "b85d5c69-5d30-4b07-a86f-2e0dd5a3c1c1",

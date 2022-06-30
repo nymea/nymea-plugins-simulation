@@ -70,6 +70,9 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
             }
+            if (settingTypeId == wallboxSettingsPhaseParamTypeId) {
+                thing->setStateValue(wallboxPhaseCountStateTypeId, value.toString() == "All" ? 3 : 1);
+            }
         });
     }
 
@@ -210,14 +213,16 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     break;
                 }
                 uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
-                double chargingPower = 230 * maxChargingCurrent;
+                uint phaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
+                phaseCount = qMin(phaseCount, car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1);
+                double chargingPower = 230 * maxChargingCurrent * phaseCount;
                 double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
                 double chargedWattHours = chargingPower * chargingTimeHours;
                 double carCapacity = car->stateValue("capacityState").toDouble();
                 // cWH : cap = x : 100
                 double chargedPercentage = chargedWattHours / 1000 * 100 / carCapacity;
                 qCDebug(dcEnergySimulation()) << "* #### Car charging info:";
-                qCDebug(dcEnergySimulation()) << "* # max charging current:" << maxChargingCurrent << "A";
+                qCDebug(dcEnergySimulation()) << "* # max charging current:" << maxChargingCurrent << "A on" << phaseCount << "phases";
                 qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
                 qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
 
