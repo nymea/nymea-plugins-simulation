@@ -1,3 +1,11 @@
+nymea-plugins-simulation (1.3.0) jammy; urgency=medium
+
+  [ Michael Zanetti ]
+  * Energy: Add a simulated generic car
+  * Energy: Fix phases handling on wallbox
+
+ -- jenkins <developer@nymea.io>  Thu, 30 Jun 2022 15:05:14 +0200
+
 nymea-plugins-simulation (1.2.0) jammy; urgency=medium
 
   [ Michael Zanetti ]
