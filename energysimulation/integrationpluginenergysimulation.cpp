@@ -66,13 +66,11 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == wallboxThingClassId) {
-        connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value){
+        connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
             }
-            if (settingTypeId == wallboxSettingsPhaseParamTypeId) {
-                thing->setStateValue(wallboxPhaseCountStateTypeId, value.toString() == "All" ? 3 : 1);
-            }
+            updateSimulation();
         });
     }
 
@@ -215,6 +213,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                 uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
                 uint phaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
                 phaseCount = qMin(phaseCount, car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1);
+                evCharger->setStateValue(wallboxPhaseCountStateTypeId, phaseCount);
                 double chargingPower = 230 * maxChargingCurrent * phaseCount;
                 double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
                 double chargedWattHours = chargingPower * chargingTimeHours;
