@@ -68,7 +68,8 @@ void IntegrationPluginSensorsSimulation::setupThing(ThingSetupInfo *info)
     if (thing->thingClassId() == fingerPrintSensorThingClassId ||
             thing->thingClassId() == barcodeScannerThingClassId ||
             thing->thingClassId() == contactSensorThingClassId ||
-            thing->thingClassId() == waterSensorThingClassId) {
+            thing->thingClassId() == waterSensorThingClassId ||
+            thing->thingClassId() == vibrationSensorThingClassId) {
         m_simulationTimers.insert(thing, new QTimer(thing));
         connect(m_simulationTimers[thing], &QTimer::timeout, this, &IntegrationPluginSensorsSimulation::simulationTimerTimeout);
     }
@@ -83,6 +84,12 @@ void IntegrationPluginSensorsSimulation::setupThing(ThingSetupInfo *info)
     }
     if (thing->thingClassId() == waterSensorThingClassId) {
         m_simulationTimers.value(thing)->start(10000);
+    }
+    if (thing->thingClassId() == vibrationSensorThingClassId) {
+        m_simulationTimers.value(thing)->start(10000);
+        QTimer::singleShot(2000, thing, [thing](){
+            thing->emitEvent(vibrationSensorVibrationDetectedEventTypeId);
+        });
     }
     info->finish(Thing::ThingErrorNoError);
 }
@@ -348,5 +355,10 @@ void IntegrationPluginSensorsSimulation::simulationTimerTimeout()
     } else if (thing->thingClassId() == waterSensorThingClassId) {
         bool wet = qrand() > (RAND_MAX / 2);
         thing->setStateValue(waterSensorWaterDetectedStateTypeId, wet);
+    } else if (thing->thingClassId() == vibrationSensorThingClassId) {
+        bool yes = qrand() < (RAND_MAX / 4);
+        if (yes) {
+            thing->emitEvent(vibrationSensorVibrationDetectedEventTypeId);
+        }
     }
 }

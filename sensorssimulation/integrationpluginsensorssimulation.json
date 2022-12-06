@@ -461,6 +461,20 @@
                             "defaultValue": false
                         }
                     ]
+                },
+                {
+                    "id": "682a51b2-da1e-483b-8ffb-7c109aa4ea9b",
+                    "name": "vibrationSensor",
+                    "displayName": "Vibration sensor",
+                    "createMethods": ["user"],
+                    "interfaces": ["vibrationsensor"],
+                    "eventTypes": [
+                        {
+                            "id": "b29add7a-f807-48e0-8866-474bc4afa0c0",
+                            "name": "vibrationDetected",
+                            "displayName": "Vibration detected"
+                        }
+                    ]
                 }
             ]
         }
