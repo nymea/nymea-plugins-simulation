@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.6.0) jammy; urgency=medium
+
+  [ Michael Zanetti ]
+  * Sensors: Add a vibration sensor
+
+ -- jenkins <developer@nymea.io>  Sat, 10 Dec 2022 14:54:31 +0100
+
 nymea-plugins-simulation (1.5.1) jammy; urgency=medium
 
 
