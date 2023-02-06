@@ -80,7 +80,7 @@ void IntegrationPluginSensorsSimulation::setupThing(ThingSetupInfo *info)
         m_simulationTimers.value(thing)->start(10000);
     }
     if (thing->thingClassId() == contactSensorThingClassId) {
-        m_simulationTimers.value(thing)->start(10000);
+        m_simulationTimers.value(thing)->start(1800000);
     }
     if (thing->thingClassId() == waterSensorThingClassId) {
         m_simulationTimers.value(thing)->start(10000);
