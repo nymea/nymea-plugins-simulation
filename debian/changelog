@@ -1,3 +1,13 @@
+nymea-plugins-simulation (1.7.0) jammy; urgency=medium
+
+  [ Michael Zanetti ]
+  * Update thing class names to include "Simulated" in their names
+  * Sensors: Add min/max values to co2 sensor
+  * Weather station simulation: Add min/max to pressure state
+  * Window sensor simulation: Trigger state less often
+
+ -- jenkins <developer@nymea.io>  Tue, 21 Feb 2023 17:44:52 +0100
+
 nymea-plugins-simulation (1.6.3) jammy; urgency=medium
 
 
