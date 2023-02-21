@@ -11,7 +11,7 @@
                 {
                     "id": "cfb44bcf-b4b9-4bef-89f7-3a55baf35668",
                     "name": "garageGate",
-                    "displayName": "Garage gate",
+                    "displayName": "Simulated garage door",
                     "createMethods": ["user"],
                     "interfaces": [ "garagegate", "light" ],
                     "paramTypes": [ ],
@@ -19,8 +19,7 @@
                         {
                             "id": "f786029d-f3a6-4b47-978a-ac1a581aac0f",
                             "name": "state",
-                            "displayName": "Garage gate state",
-                            "displayNameEvent": "Garage gate state changed",
+                            "displayName": "Garage door state",
                             "type": "QString",
                             "possibleValues": ["open", "closed", "opening", "closing"],
                             "defaultValue": "open"
@@ -29,7 +28,6 @@
                             "id": "324150cc-0357-4797-a746-37b554d82c44",
                             "name": "intermediatePosition",
                             "displayName": "Intermediate position",
-                            "displayNameEvent": "Intermediate position changed",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -37,7 +35,6 @@
                             "id": "46543561-2690-4072-a6a3-795e1c4f49a8",
                             "name": "power",
                             "displayName": "Light power",
-                            "displayNameEvent": "Light power changed",
                             "displayNameAction": "Set light power",
                             "type": "bool",
                             "defaultValue": false,
@@ -65,7 +62,7 @@
                 {
                     "id": "a13c14f1-361e-4aad-8785-c04b094fb19a",
                     "name": "simpleBlind",
-                    "displayName": "Simple blind",
+                    "displayName": "Simulated simple blind",
                     "createMethods": ["user"],
                     "interfaces": ["blind"],
                     "actionTypes": [
@@ -89,7 +86,7 @@
                 {
                     "id": "1d7aaa1d-fc50-4d7b-9657-1449322e40d8",
                     "name": "extendedBlind",
-                    "displayName": "Extended blind",
+                    "displayName": "Simulated blind with position control",
                     "createMethods": ["user"],
                     "interfaces": ["extendedblind"],
                     "paramTypes": [ ],
@@ -100,7 +97,6 @@
                             "displayName": "percentage",
                             "type": "int",
                             "unit": "Percentage",
-                            "displayNameEvent": "percentage changed",
                             "writable": true,
                             "displayNameAction": "set percentage",
                             "defaultValue": 0,
@@ -112,8 +108,7 @@
                             "name": "moving",
                             "type": "bool",
                             "defaultValue": false,
-                            "displayName": "moving",
-                            "displayNameEvent": "moving changed"
+                            "displayName": "moving"
                         }
                     ],
                     "actionTypes": [
@@ -137,7 +132,7 @@
                 {
                     "id": "38757fee-ac55-403e-be53-bad5b97364c1",
                     "name": "venetianBlind",
-                    "displayName": "Venetian blind",
+                    "displayName": "Simulated venetian blind",
                     "createMethods": ["user"],
                     "interfaces": ["venetianblind"],
                     "paramTypes": [ ],
@@ -148,7 +143,6 @@
                             "displayName": "percentage",
                             "type": "int",
                             "unit": "Percentage",
-                            "displayNameEvent": "percentage changed",
                             "writable": true,
                             "displayNameAction": "set percentage",
                             "defaultValue": 0,
@@ -160,15 +154,13 @@
                             "name": "moving",
                             "type": "bool",
                             "defaultValue": false,
-                            "displayName": "moving",
-                            "displayNameEvent": "moving changed"
+                            "displayName": "moving"
                         },
                         {
                             "id": "fe3c802d-253f-4594-b64c-14a8870d9828",
                             "name": "angle",
                             "type": "int",
                             "displayName": "Angle",
-                            "displayNameEvent": "Angle changed",
                             "displayNameAction": "Set angle",
                             "minValue": -90,
                             "maxValue": 90,
@@ -198,7 +190,7 @@
                 {
                     "id": "d302630b-f331-4bb0-88e4-4078f16aba7f",
                     "name": "extendedAwning",
-                    "displayName": "Extended awning",
+                    "displayName": "Simulated awning with position control",
                     "createMethods": ["user"],
                     "interfaces": ["extendedawning"],
                     "paramTypes": [ ],
@@ -210,7 +202,6 @@
                             "unit": "Percentage",
                             "writable": true,
                             "displayName": "percentage",
-                            "displayNameEvent": "percentage changed",
                             "displayNameAction": "set percentage",
                             "minValue": 0,
                             "maxValue": 100,
@@ -221,8 +212,7 @@
                             "name": "moving",
                             "type": "bool",
                             "defaultValue": false,
-                            "displayName": "mooving",
-                            "displayNameEvent": "moving changed"
+                            "displayName": "mooving"
                         }
                     ],
                     "actionTypes": [
@@ -246,7 +236,7 @@
                 {
                     "id": "5f4e3fc9-afb1-45d0-86a2-8713d5894aee",
                     "name": "simpleShutter",
-                    "displayName": "Simple roller shutter",
+                    "displayName": "Simulated simple roller shutter",
                     "createMethods": ["user"],
                     "interfaces": ["shutter"],
                     "actionTypes": [
@@ -270,7 +260,7 @@
                 {
                     "id": "1039b7ee-5351-400b-a477-5b8fc1447138",
                     "name": "rollerShutter",
-                    "displayName": "Roller Shutter",
+                    "displayName": "Simulated roller Shutter",
                     "createMethods": ["user"],
                     "interfaces": ["extendedshutter"],
                     "paramTypes": [ ],
@@ -282,7 +272,6 @@
                             "unit": "Percentage",
                             "writable": true,
                             "displayName": "percentage",
-                            "displayNameEvent": "percentage changed",
                             "displayNameAction": "set percentage",
                             "minValue": 0,
                             "maxValue": 100,
@@ -293,8 +282,7 @@
                             "name": "moving",
                             "type": "bool",
                             "defaultValue": false,
-                            "displayName": "mooving",
-                            "displayNameEvent": "moving changed"
+                            "displayName": "mooving"
                         }
                     ],
                     "actionTypes": [

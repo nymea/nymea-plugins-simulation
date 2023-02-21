@@ -63,15 +63,8 @@ void IntegrationPluginHeatingSimulation::setupThing(ThingSetupInfo *info)
 {
     Thing *thing = info->thing();
 
-    if (thing->thingClassId() == thermostatThingClassId) {
-    }
-
-    if (thing->thingClassId() == x2wpThingClassId) {
-        thing->setStateValue(x2wpConnectedStateTypeId, true);
-        thing->setStateValue(x2wpPowerStateTypeId, true);
-
-    } else if (thing->thingClassId() == x2luThingClassId) {
-        thing->setStateValue(x2luConnectedStateTypeId, true);
+    if (thing->thingClassId() == ventilationThingClassId) {
+        thing->setStateValue(ventilationConnectedStateTypeId, true);
     }
 
     info->finish(Thing::ThingErrorNoError);
@@ -144,29 +137,18 @@ void IntegrationPluginHeatingSimulation::executeAction(ThingActionInfo *info)
             return info->finish(Thing::ThingErrorNoError);
         }
 
-    } else if (action.actionTypeId() == x2luVentilationModeActionTypeId) {
-        QString mode = action.param(x2luVentilationModeActionVentilationModeParamTypeId).value().toString();
-        qCDebug(dcHeatingSimulation()) << "ExecuteAction" << action.actionTypeId() << mode;
-        thing->setStateValue(x2luVentilationModeStateTypeId, mode);
-        if (mode == "Manual level 0") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 0);
-        } else if (mode == "Manual level 1") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
-        } else if (mode == "Manual level 2") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 2);
-        } else if (mode == "Manual level 3") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
-        } else if (mode == "Automatic") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
-        } else if (mode == "Party") {
-            thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 3);
+    } else if (thing->thingClassId() == ventilationThingClassId) {
+        if (action.actionTypeId() == ventilationFlowRateActionTypeId) {
+            int flowRate = action.param(ventilationFlowRateActionFlowRateParamTypeId).value().toInt();
+            qCDebug(dcHeatingSimulation()) << "Setting flowrate to" << flowRate;
+            thing->setStateValue(ventilationFlowRateStateTypeId, flowRate);
+        } else if (action.actionTypeId() == ventilationPowerActionTypeId) {
+            bool power = action.param(ventilationPowerActionPowerParamTypeId).value().toBool();
+            thing->setStateValue(ventilationPowerStateTypeId, power);
+        } else if (action.actionTypeId() == ventilationAutoActionTypeId) {
+            bool autoMode = action.param(ventilationAutoActionAutoParamTypeId).value().toBool();
+            thing->setStateValue(ventilationAutoStateTypeId, autoMode);
         }
-    } else if (action.actionTypeId() == x2wpPowerActionTypeId) {
-        thing->setStateValue(x2wpPowerStateTypeId, action.param(x2wpPowerActionPowerParamTypeId).value());
-    } else if (action.actionTypeId() == x2wpTargetTemperatureActionTypeId) {
-        thing->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetTemperatureActionTargetTemperatureParamTypeId).value());
-    } else if (action.actionTypeId() == x2wpTargetWaterTemperatureActionTypeId) {
-        thing->setStateValue(x2wpTargetTemperatureStateTypeId, action.param(x2wpTargetWaterTemperatureActionTargetWaterTemperatureParamTypeId).value());
     }
     info->finish(Thing::ThingErrorNoError);
 }
@@ -174,43 +156,14 @@ void IntegrationPluginHeatingSimulation::executeAction(ThingActionInfo *info)
 void IntegrationPluginHeatingSimulation::onPluginTimer1Minute()
 {
     foreach (Thing *thing, myThings()) {
-        if(thing->thingClassId() == x2wpThingClassId) {
-            double targetValue = thing->stateValue(x2wpTargetTemperatureStateTypeId).toDouble();
-            double currentValue = thing->stateValue(x2wpTemperatureStateTypeId).toDouble();
-            int r = qrand();
-            int diff = qRound(qAbs(targetValue - currentValue) + 1);
-            int maxDelta = diff + 1;
-            double delta = (r % maxDelta) * 0.1;
-            double downCorrection = diff * .025;
-            delta = delta - downCorrection;
-            if (targetValue > currentValue) {
-                thing->setStateValue(x2wpTemperatureStateTypeId, currentValue + delta);
-            } else {
-                thing->setStateValue(x2wpTemperatureStateTypeId, currentValue - delta);
-            }
 
-        } else if (thing->thingClassId() == x2luThingClassId) {
-            int ventilationLevel = thing->stateValue(x2luActiveVentilationLevelStateTypeId).toInt();
-            double targetValue = ventilationLevel > 0 ? 350 : 1500;
-            double currentValue = thing->stateValue(x2luCo2StateTypeId).toDouble();
-            int r = qrand();
-            int diff = qRound(qAbs(targetValue - currentValue) + 1);
-            int maxDelta = diff + 1;
-            double delta = (r % maxDelta) * (0.01 * (ventilationLevel + 1));
-            double downCorrection = diff * .0025;
-            delta = delta - downCorrection;
-            if (targetValue > currentValue) {
-                thing->setStateValue(x2luCo2StateTypeId, currentValue + delta);
-            } else {
-                thing->setStateValue(x2luCo2StateTypeId, currentValue - (delta * 2));
-            }
-
-            bool autoVentilation = thing->stateValue(x2luVentilationModeStateTypeId).toString() == "Automatic";
+        if (thing->thingClassId() == ventilationThingClassId) {
+            bool autoVentilation = thing->stateValue(ventilationAutoStateTypeId).toBool();
             if (autoVentilation) {
-                if (ventilationLevel == 0 && currentValue > 800) {
-                    thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 1);
-                } else if (ventilationLevel >= 1 && currentValue < 400) {
-                    thing->setStateValue(x2luActiveVentilationLevelStateTypeId, 0);
+                int newLevel = qrand() % 4;
+                thing->setStateValue(ventilationPowerStateTypeId, newLevel > 0);
+                if (newLevel > 0) {
+                    thing->setStateValue(ventilationFlowRateStateTypeId, newLevel);
                 }
             }
         }

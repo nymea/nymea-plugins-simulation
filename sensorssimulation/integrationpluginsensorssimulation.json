@@ -11,7 +11,7 @@
                 {
                     "id": "77c6ccff-84e8-4983-b69e-5e1a3f4723f2",
                     "name": "temperatureSensor",
-                    "displayName": "Temperature sensor",
+                    "displayName": "Simulated temperature sensor",
                     "createMethods": ["user"],
                     "interfaces": ["temperaturesensor", "humiditysensor", "battery", "connectable"],
                     "paramTypes": [ ],
@@ -20,7 +20,6 @@
                             "id": "169d7a2a-d1c9-4578-bb30-fc7d25690e59",
                             "name": "temperature",
                             "displayName": "Temperature",
-                            "displayNameEvent": "Temperature changed",
                             "type": "double",
                             "unit": "DegreeCelsius",
                             "defaultValue": 0,
@@ -32,7 +31,6 @@
                             "id": "10c735fd-7b81-484a-a148-76ea0da840f0",
                             "name": "humidity",
                             "displayName": "Humidity",
-                            "displayNameEvent": "Humidity changed",
                             "type": "double",
                             "minValue": 0,
                             "maxValue": 100,
@@ -44,7 +42,6 @@
                             "id": "45c0de32-b519-47d7-9f82-e5f09d1542d4",
                             "name": "batteryLevel",
                             "displayName": "Battery",
-                            "displayNameEvent": "Battery level changed",
                             "type": "int",
                             "minValue": 0,
                             "maxValue": 100,
@@ -55,7 +52,6 @@
                             "id": "295b9a17-a4b1-4cc9-8ebb-2309b72c75f6",
                             "name": "batteryCritical",
                             "displayName": "Battery critical",
-                            "displayNameEvent": "Battery critical changed",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -63,7 +59,6 @@
                             "id": "e66aba37-2647-4b6b-8740-d59eb98d846c",
                             "name": "connected",
                             "displayName": "Connected",
-                            "displayNameEvent": "Connected changed",
                             "type": "bool",
                             "defaultValue": true
                         }
@@ -72,7 +67,7 @@
                 {
                     "id": "990fc2ba-260a-4648-9a93-e803e219da4f",
                     "name": "motionDetector",
-                    "displayName": "Motion Detector",
+                    "displayName": "Simulated motion Detector",
                     "createMethods": ["user"],
                     "interfaces": ["presencesensor", "battery", "connectable"],
                     "paramTypes": [ ],
@@ -81,7 +76,6 @@
                             "id": "5ab00bfc-7345-44a2-90d4-852c810e59ec",
                             "name": "isPresent",
                             "displayName": "Active",
-                            "displayNameEvent": "Motion detected",
                             "type": "bool",
                             "defaultValue": false,
                             "ioType": "digitalInput"
@@ -90,7 +84,6 @@
                             "id": "4d66c81e-6293-4997-9685-8b44d7e5c1bd",
                             "name": "batteryLevel",
                             "displayName": "Battery",
-                            "displayNameEvent": "Battery level changed",
                             "type": "int",
                             "unit": "Percentage",
                             "minValue": 0,
@@ -101,7 +94,6 @@
                             "id": "1c621a6f-86fe-4351-bf9e-03c3deaef6ad",
                             "name": "batteryCritical",
                             "displayName": "Battery critical",
-                            "displayNameEvent": "Battery critical changed",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -109,7 +101,6 @@
                             "id": "b481b6e7-77c1-40b0-859a-286876b05959",
                             "name": "connected",
                             "displayName": "Connected",
-                            "displayNameEvent": "Connected changed",
                             "type": "bool",
                             "defaultValue": true
                         },
@@ -117,7 +108,6 @@
                             "id": "17874952-a1ab-467f-9786-29ffe3196a8c",
                             "name": "lastSeenTime",
                             "displayName": "Last seen",
-                            "displayNameEvent": "Last seen changed",
                             "type": "int",
                             "unit": "UnixTime",
                             "defaultValue": 0
@@ -127,7 +117,7 @@
                 {
                     "id": "45906fb3-9bf5-4331-9b69-0a0407b8511e",
                     "name": "fingerPrintSensor",
-                    "displayName": "Finger Print Sensor",
+                    "displayName": "Simulated finger print sensor",
                     "createMethods": ["user"],
                     "interfaces": ["fingerprintreader", "connectable"],
                     "paramTypes": [ ],
@@ -136,7 +126,6 @@
                             "id": "2e51cb1b-9f6a-4a45-b23e-ab44e8ab28e9",
                             "name": "connected",
                             "displayName": "Connected",
-                            "displayNameEvent": "Connected changed",
                             "type": "bool",
                             "defaultValue": true
                         },
@@ -144,7 +133,6 @@
                             "id": "02482093-3b82-4918-a3ce-2a2f4831aae0",
                             "name": "users",
                             "displayName": "Users",
-                            "displayNameEvent": "Users changed",
                             "type": "QStringList",
                             "defaultValue": []
                         }
@@ -237,8 +225,8 @@
                 },
                 {
                     "id": "7f1696e3-3145-421e-9a42-5bd3b2fd0e2c",
-                    "name": "netatmoIndoor",
-                    "displayName": "Netatmo Indoor Station",
+                    "name": "weatherStation",
+                    "displayName": "Simulated weather station",
                     "interfaces": ["temperaturesensor", "humiditysensor", "pressuresensor"],
                     "createMethods": ["user"],
                     "paramTypes": [ ],
@@ -247,7 +235,6 @@
                             "id": "29a95a72-f897-4027-99a8-ab1aee1ebe2b",
                             "name": "updateTime",
                             "displayName": "Last update",
-                            "displayNameEvent": "Last update changed",
                             "unit": "UnixTime",
                             "type": "int",
                             "defaultValue": 0
@@ -256,7 +243,6 @@
                             "id": "b5244e65-0811-4dc2-afd2-6bf3092d44c7",
                             "name": "temperature",
                             "displayName": "Temperature",
-                            "displayNameEvent": "Temperature changed",
                             "unit": "DegreeCelsius",
                             "type": "double",
                             "defaultValue": 22.7
@@ -265,7 +251,6 @@
                             "id": "b2225720-dfdc-40f8-a24a-20247e69e575",
                             "name": "humidity",
                             "displayName": "Humidity",
-                            "displayNameEvent": "Humidity changed",
                             "unit": "Percentage",
                             "type": "double",
                             "defaultValue": 37,
@@ -276,7 +261,6 @@
                             "id": "b13fa34e-b63d-4fa4-a786-e82776ee9cbe",
                             "name": "pressure",
                             "displayName": "Pressure",
-                            "displayNameEvent": "Pressure changed",
                             "unit": "MilliBar",
                             "type": "double",
                             "defaultValue": 1006
@@ -285,7 +269,6 @@
                             "id": "b16ea43e-75ef-4bee-ade6-839682ec3068",
                             "name": "noise",
                             "displayName": "Noise",
-                            "displayNameEvent": "Noise changed",
                             "unit": "Dezibel",
                             "type": "int",
                             "defaultValue": 68
@@ -294,7 +277,6 @@
                             "id": "c5ebe5c0-b030-4eb6-a3f8-3a400061d09c",
                             "name": "co2",
                             "displayName": "CO2",
-                            "displayNameEvent": "CO2 changed",
                             "unit": "PartsPerMillion",
                             "type": "int",
                             "defaultValue": 350
@@ -303,7 +285,6 @@
                             "id": "3b8fb712-ff4c-4c0f-83bc-2edac54fede7",
                             "name": "wifiStrength",
                             "displayName": "Wifi signal strength",
-                            "displayNameEvent": "Wifi signal strength changed",
                             "unit": "Percentage",
                             "type": "int",
                             "defaultValue": 87
@@ -313,16 +294,15 @@
                 {
                     "id": "b759f558-b484-45b6-9132-218d135c27d6",
                     "name": "gardenSensor",
-                    "displayName": "Garden sensor",
+                    "displayName": "Simulated garden sensor",
                     "createMethods": ["user"],
-                    "interfaces": ["temperaturesensor", "battery", "connectable"],
+                    "interfaces": ["temperaturesensor", "lightsensor", "battery", "connectable"],
                     "paramTypes": [ ],
                     "stateTypes": [
                         {
                             "id": "63eb7cdd-d16e-4baf-820b-7ad9f0a2b2a8",
                             "name": "soilMoisture",
                             "displayName": "Soil moisture",
-                            "displayNameEvent": "Soil moisture changed",
                             "type": "double",
                             "minValue": 0,
                             "maxValue": 100,
@@ -333,16 +313,14 @@
                             "id": "e75207e8-10a9-4bdc-974e-1e44e119ee23",
                             "name": "temperature",
                             "displayName": "Temperature",
-                            "displayNameEvent": "Temperature changed",
                             "type": "double",
                             "unit": "DegreeCelsius",
                             "defaultValue": 0
                         },
                         {
                             "id": "9781f0a5-3478-4291-ab51-9daa1ba0e44e",
-                            "name": "illuminance",
+                            "name": "lightIntensity",
                             "displayName": "Illuminance",
-                            "displayNameEvent": "Illuminance changed",
                             "type": "double",
                             "unit": "Lux",
                             "defaultValue": 20
@@ -351,7 +329,6 @@
                             "id": "6a7ecb09-135c-4be2-8c36-f2a71711ea05",
                             "name": "batteryLevel",
                             "displayName": "Battery",
-                            "displayNameEvent": "Battery level changed",
                             "type": "int",
                             "minValue": 0,
                             "maxValue": 100,
@@ -362,7 +339,6 @@
                             "id": "68d818fd-ad8a-411d-95b1-811991535fe2",
                             "name": "batteryCritical",
                             "displayName": "Battery critical",
-                            "displayNameEvent": "Battery critical changed",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -370,7 +346,6 @@
                             "id": "b5e8ace1-983c-4bff-90ef-3af30257b158",
                             "name": "connected",
                             "displayName": "Connected",
-                            "displayNameEvent": "Connected changed",
                             "type": "bool",
                             "defaultValue": true
                         }
@@ -379,7 +354,7 @@
                 {
                     "id": "672d68ac-c19b-46b0-be01-4468c36dd3da",
                     "name": "barcodeScanner",
-                    "displayName": "Barcode Scanner",
+                    "displayName": "Simulated barcode Scanner",
                     "createMethods": ["user"],
                     "interfaces": ["barcodescanner"],
                     "eventTypes": [
@@ -400,7 +375,7 @@
                 },
                 {
                     "name": "contactSensor",
-                    "displayName": "Door/window sensor",
+                    "displayName": "Simulated door/window sensor",
                     "id": "14f6c41c-b1ba-4d83-b1b2-d764a62c8eed",
                     "setupMethod": "JustAdd",
                     "createMethods": [ "user" ],
@@ -410,7 +385,6 @@
                             "id": "47789719-e300-4d0d-b861-42f24af38103",
                             "name": "connected",
                             "displayName": "Available",
-                            "displayNameEvent": "Available changed",
                             "type": "bool",
                             "cached": false,
                             "defaultValue": true
@@ -419,7 +393,6 @@
                             "id": "bb02bb10-a933-4833-8a1d-40dda41691b2",
                             "name": "closed",
                             "displayName": "Closed",
-                            "displayNameEvent": "Closed changed",
                             "type": "bool",
                             "defaultValue": false,
                             "ioType": "digitalInput"
@@ -428,7 +401,6 @@
                             "id": "4979b1a8-7f1e-4b65-9c35-187045c42a8f",
                             "name": "batteryLevel",
                             "displayName": "Battery",
-                            "displayNameEvent": "Battery level changed",
                             "type": "int",
                             "minValue": 0,
                             "maxValue": 100,
@@ -439,7 +411,6 @@
                             "id": "8d87413f-b625-4b77-aa95-2029b4bfb741",
                             "name": "batteryCritical",
                             "displayName": "Battery critical",
-                            "displayNameEvent": "Battery critical changed",
                             "type": "bool",
                             "defaultValue": false
                         }
@@ -448,7 +419,7 @@
                 {
                     "id": "088aa0cb-61e8-46b6-b99d-699a29fd79c7",
                     "name": "waterSensor",
-                    "displayName": "Water sensor",
+                    "displayName": "Simulated water sensor",
                     "createMethods": ["user"],
                     "interfaces": ["watersensor"],
                     "stateTypes": [
@@ -456,7 +427,6 @@
                             "id": "764cbbbf-6a5c-4265-9424-fc9e6dd86fda",
                             "name": "waterDetected",
                             "displayName": "Wet",
-                            "displayNameEvent": "Water detected",
                             "type": "bool",
                             "defaultValue": false
                         }
@@ -465,7 +435,7 @@
                 {
                     "id": "682a51b2-da1e-483b-8ffb-7c109aa4ea9b",
                     "name": "vibrationSensor",
-                    "displayName": "Vibration sensor",
+                    "displayName": "Simulated vibration sensor",
                     "createMethods": ["user"],
                     "interfaces": ["vibrationsensor"],
                     "eventTypes": [

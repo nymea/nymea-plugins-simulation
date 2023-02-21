@@ -11,7 +11,7 @@
                 {
                     "id": "62e302f4-b92a-4b55-bd18-a1e0cc56362a",
                     "name": "heating",
-                    "displayName": "Simple heater",
+                    "displayName": "Simulated simple heater",
                     "createMethods": ["user"],
                     "interfaces": ["heating"],
                     "paramTypes": [ ],
@@ -20,7 +20,6 @@
                             "id": "e1910c53-a6bc-434b-9caa-0d08e214c122",
                             "name": "power",
                             "displayName": "Power",
-                            "displayNameEvent": "Power changed",
                             "displayNameAction": "Set power",
                             "type": "bool",
                             "defaultValue": false,
@@ -30,7 +29,6 @@
                             "id": "1302cb53-ccdc-49eb-88b6-85659c7d11b8",
                             "name": "percentage",
                             "displayName": "Percentage",
-                            "displayNameEvent": "Percentage changed",
                             "displayNameAction": "Set percentage",
                             "type": "int",
                             "minValue": 0,
@@ -45,7 +43,7 @@
                 {
                     "id": "227da953-e476-4c31-b3f6-fdd389bb1b7c",
                     "name": "thermostat",
-                    "displayName": "Thermostat",
+                    "displayName": "Simulated thermostat",
                     "createMethods": ["user"],
                     "interfaces": ["thermostat"],
                     "paramTypes": [ ],
@@ -54,7 +52,6 @@
                             "id": "edc0ccb6-3a78-44b9-8c7d-638142c27e10",
                             "name": "targetTemperature",
                             "displayName": "Target temperature",
-                            "displayNameEvent": "Target temperature changed",
                             "displayNameAction": "Set target temperature",
                             "type": "double",
                             "unit": "DegreeCelsius",
@@ -67,7 +64,6 @@
                             "id": "f3df52f0-ee1d-4163-a7b5-95d8f22b8841",
                             "name": "temperature",
                             "displayName": "Current temperature",
-                            "displayNameEvent": "Current temperature changed",
                             "type": "double",
                             "unit": "DegreeCelsius",
                             "defaultValue": 18
@@ -76,7 +72,6 @@
                             "id": "94a7d50c-df3b-4590-a89e-9dae40ad84fa",
                             "name": "heatingOn",
                             "displayName": "Heating on",
-                            "displayNameEvent": "Heating turned on/off",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -84,7 +79,6 @@
                             "id": "4c696205-392a-45ed-aab5-3b7f97ddf286",
                             "name": "coolingOn",
                             "displayName": "Cooling on",
-                            "displayNameEvent": "Cooling turned on/off",
                             "type": "bool",
                             "defaultValue": false
                         },
@@ -92,7 +86,6 @@
                             "id": "f892f660-87ff-458a-bfa0-5af08591233e",
                             "name": "boost",
                             "displayName": "Boost",
-                            "displayNameEvent": "Boost enabled changed",
                             "displayNameAction": "Enable/disable boost",
                             "type": "bool",
                             "defaultValue": false,
@@ -102,190 +95,55 @@
                     ]
                 },
                 {
-                    "name": "x2lu",
-                    "displayName": "X2 LU",
-                    "id": "0de8e21e-392a-4790-a78a-b1a7eaa7571b",
+                    "name": "ventilation",
+                    "displayName": "Simulated ventilation",
+                    "id": "5266554f-e6ec-4148-b338-2d4b41ad003d",
                     "createMethods": ["user"],
-                    "interfaces": ["co2sensor", "connectable"],
+                    "interfaces": ["ventilation", "co2sensor", "connectable"],
                     "stateTypes":[
                         {
-                            "id": "181ce6e2-9c55-45c6-b329-adf379679e07a",
+                            "id": "75189da5-fc04-4f92-834e-1b25880c57f4",
                             "name": "connected",
                             "displayName": "connected",
-                            "displayNameEvent": "connection status changed",
                             "type": "bool",
                             "defaultValue": false
                         },
                         {
-                            "id": "0a6b44c8-e7af-4148-92ff-682ae717f3a8",
+                            "id": "509a5d0a-f468-4310-955f-8330d724f5d3",
                             "name": "co2",
                             "displayName": "CO2",
-                            "displayNameEvent": "CO2 changed",
                             "unit": "PartsPerMillion",
                             "type": "double",
                             "defaultValue": 350
                         },
                         {
-                            "id": "4269d9d0-ddff-4e7a-9d7a-bf9a7db50f98",
-                            "name": "ventilationMode",
-                            "displayName": "Ventilation mode",
-                            "displayNameEvent": "Ventilation mode changed",
-                            "displayNameAction": "Change ventilation mode",
-                            "type": "QString",
-                            "defaultValue": "Manual level 0",
-                            "possibleValues": [
-                                "Manual level 0",
-                                "Manual level 1",
-                                "Manual level 2",
-                                "Manual level 3",
-                                "Automatic",
-                                "Party"
-                            ],
-                            "writable": true
-                        },
-                        {
-                            "id": "1f26a013-7836-4f3e-b369-7ce07310fc59",
-                            "name": "activeVentilationLevel",
-                            "displayName": "Ventilation level",
-                            "displayNameEvent": "Ventilation level changed",
-                            "type": "int",
-                            "defaultValue": 0
-                        }
-                    ]
-                },
-                {
-                    "name": "x2wp",
-                    "displayName": "X2 WP",
-                    "id": "e548f962-92db-4110-8279-10fbcde35f93",
-                    "createMethods": ["user"],
-                    "interfaces": ["thermostat", "heating", "temperaturesensor", "connectable"],
-                    "stateTypes":[
-
-                        {
-                            "id": "bec0b561-f81f-4a3c-b514-f1b6cb754835",
-                            "name": "connected",
-                            "displayName": "connected",
-                            "displayNameEvent": "connection status changed",
-                            "type": "bool",
-                            "defaultValue": false
-                        },
-                        {
-                            "id": "f2ce8389-c33f-4f10-8484-f2e993841762",
+                            "id": "018c396c-5636-4561-9647-977cc0626063",
                             "name": "power",
                             "displayName": "Power",
-                            "displayNameEvent": "Power changed",
-                            "displayNameAction": "Change power",
+                            "displayNameAction": "Turn on/off",
                             "type": "bool",
-                            "defaultValue": 0,
+                            "defaultValue": false,
                             "writable": true
                         },
                         {
-                            "id": "3ab2d609-1686-4fd7-84e3-580c8e0537d0",
-                            "name": "temperature",
-                            "displayName": "Room temperature",
-                            "displayNameEvent": "Room temperature changed",
-                            "type": "double",
-                            "unit": "DegreeCelsius",
-                            "defaultValue": 0
-                        },
-                        {
-                            "id": "77a96b57-fa0a-4946-af5b-39c3b66d9422",
-                            "name": "waterTemperature",
-                            "displayName": "Water temperature",
-                            "displayNameEvent": "Water temperature changed",
-                            "type": "double",
-                            "unit": "DegreeCelsius",
-                            "defaultValue": 0
-                        },
-                        {
-                            "id": "32378843-5478-4b86-9c0e-ccbf978c02be",
-                            "name": "outsideAirTemperature",
-                            "displayName": "Outside air temperature",
-                            "displayNameEvent": "Outside air temperature changed",
-                            "type": "double",
-                            "unit": "DegreeCelsius",
-                            "defaultValue": 0
-                        },
-                        {
-                            "id": "fb98754d-0fba-4163-9b74-3e5a07d71421",
-                            "name": "targetTemperature",
-                            "displayName": "Target room temperature",
-                            "displayNameEvent": "Target room temperature changed",
-                            "displayNameAction": "Change room target temperature",
-                            "type": "double",
-                            "unit": "DegreeCelsius",
-                            "minValue": 14.00,
-                            "maxValue": 26.00,
-                            "defaultValue": 22.00,
+                            "id": "067292cd-6005-4ae9-b84d-d773aa12c567",
+                            "name": "flowRate",
+                            "displayName": "Ventilation level",
+                            "displayNameAction": "Change ventilation level",
+                            "type": "int",
+                            "defaultValue": 1,
+                            "minValue": 1,
+                            "maxValue": 3,
                             "writable": true
                         },
                         {
-                            "id": "fb021cac-1236-4324-a45c-8d89ad069052",
-                            "name": "targetWaterTemperature",
-                            "displayName": "Target water temperature",
-                            "displayNameEvent": "Target water temperature changed",
-                            "displayNameAction": "Change water target temperature",
-                            "type": "double",
-                            "unit": "DegreeCelsius",
-                            "minValue": 20.00,
-                            "maxValue": 55.00,
-                            "defaultValue": 46.00,
+                            "id": "0873c40c-ac98-4aec-9472-fe91f12b79ef",
+                            "name": "auto",
+                            "displayName": "Auto mode",
+                            "displayNameAction": "Enable/disable auto mode",
+                            "type": "bool",
+                            "defaultValue": false,
                             "writable": true
-                        },
-                        {
-                            "id": "5c125ddd-a0db-40fe-9998-2afea6c727f1",
-                            "name": "heatPumpMode",
-                            "displayName": "Heat pump mode",
-                            "displayNameEvent": "Heat pump mode changed",
-                            "type": "QString",
-                            "defaultValue": "Heat pump off",
-                            "possibleValues": [
-                                "Restart interlock" ,
-                                "Heat pump off",
-                                "Lead time brine pump",
-                                "Fan run-up time",
-                                "Open hot gas valve",
-                                "Open LPG valve",
-                                "Start compressor",
-                                "Minimum runtime heat pump",
-                                "Heat pump on",
-                                "Draw off refrigerant",
-                                "Vacuum during defrosting",
-                                "Defrost",
-                                "Drain after defrosting"
-                            ]
-                        },
-                        {
-                            "id": "8d6e52ef-992d-47ac-90a8-9dba95ab200e",
-                            "name": "error",
-                            "displayName": "Error",
-                            "displayNameEvent": "Error occured",
-                            "type": "QString",
-                            "defaultValue": "No error",
-                            "possibleValues": [
-                                "No error",
-                                "Exhaust fan" ,
-                                "Boiler sensor electric heating element",
-                                "Boiler sensor solar",
-                                "Boiler sensor heat pump",
-                                "Boiler overtemperature",
-                                "CO2-Sensor",
-                                "Pressure loss exhaust air too big",
-                                "Pressure loss supply air too large",
-                                "Flow rate of heating circuit",
-                                "Flow rate brine circuit",
-                                "Participant not available",
-                                "Temperature sensor outside air",
-                                "Temperature sensor heating circuit flow",
-                                "Temperature sensor room",
-                                "Temperature sensor solar collector",
-                                "Temperature sensor brine",
-                                "Temperature sensor brine outside air",
-                                "Heat pump high pressure",
-                                "Heat pump low pressure",
-                                "Value not allowed",
-                                "Supply air fan"
-                            ]
                         }
                     ]
                 }
