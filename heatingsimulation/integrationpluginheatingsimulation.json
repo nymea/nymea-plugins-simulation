@@ -114,6 +114,8 @@
                             "displayName": "CO2",
                             "unit": "PartsPerMillion",
                             "type": "double",
+                            "minValue": 0,
+                            "maxValue": 2000,
                             "defaultValue": 350
                         },
                         {
