@@ -70,6 +70,13 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
             }
+            if (settingTypeId == wallboxSettingsPhaseParamTypeId) {
+                if (value.toString() == "All") {
+                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1,3});
+                } else {
+                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1});
+                }
+            }
             updateSimulation();
         });
     }
@@ -110,6 +117,9 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         }
         if (info->action().actionTypeId() == wallboxMaxChargingCurrentActionTypeId) {
             info->thing()->setStateValue(wallboxMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
+        }
+        if (info->action().actionTypeId() == wallboxDesiredPhaseCountActionTypeId) {
+            info->thing()->setStateValue(wallboxDesiredPhaseCountStateTypeId, info->action().paramValue(wallboxDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt());
         }
     }
     if (info->thing()->thingClassId() == apiCarThingClassId || info->thing()->thingClassId() == genericCarThingClassId) {
@@ -211,8 +221,11 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     break;
                 }
                 uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
-                uint phaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
-                phaseCount = qMin(phaseCount, car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1);
+                uint connectedPhaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
+                uint desiredPhaseCount = evCharger->stateValue(wallboxDesiredPhaseCountStateTypeId).toUInt();
+                uint carPhaseCount = car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1;
+                qCDebug(dcEnergySimulation()) << "Connected phases:" << connectedPhaseCount << "desired phases:" << desiredPhaseCount << "Car phases:" << carPhaseCount;
+                uint phaseCount = qMin(desiredPhaseCount, qMin(connectedPhaseCount, carPhaseCount));
                 evCharger->setStateValue(wallboxPhaseCountStateTypeId, phaseCount);
                 double chargingPower = 230 * maxChargingCurrent * phaseCount;
                 double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;

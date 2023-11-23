@@ -103,6 +103,18 @@
                             "minValue": 1,
                             "maxValue": 3,
                             "defaultValue": 1
+                        },
+                        {
+                            "id": "28103321-c140-42be-bc0e-6493fc37edc0",
+                            "name": "desiredPhaseCount",
+                            "displayName": "Desired phase count",
+                            "displayNameAction": "Set desired phase count",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "possibleValues": [1, 3],
+                            "defaultValue": 3,
+                            "writable": true
                         }
                     ]
                 },
