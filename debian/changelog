@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.9.0) jammy; urgency=medium
+
+  [ Michael Zanetti ]
+  * EnergySimulation: Add desiredPhaseCount to simulated wallbox
+
+ -- jenkins <developer@nymea.io>  Thu, 23 Nov 2023 09:53:42 +0100
+
 nymea-plugins-simulation (1.8.4) jammy; urgency=medium
 
 
