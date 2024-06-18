@@ -90,9 +90,15 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == genericCarThingClassId) {
+
+        thing->setStateValue(genericCarPhaseCountStateTypeId, thing->setting(genericCarSettingsPhaseCountParamTypeId));
+        thing->setStateValue(genericCarCapacityStateTypeId, thing->setting(genericCarSettingsCapacityParamTypeId));
+
         connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == genericCarSettingsPhaseCountParamTypeId) {
                 thing->setStateValue(genericCarPhaseCountStateTypeId, value);
+            } else if (settingTypeId == genericCarSettingsCapacityParamTypeId) {
+                thing->setStateValue(genericCarCapacityStateTypeId, value);
             }
         });
     }
