@@ -505,6 +505,16 @@
                             "minValue": 1,
                             "maxValue": 3,
                             "defaultValue": 3
+                        },
+                        {
+                            "id": "d1aac8af-29f8-4003-8a48-b2b354aa9d57",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "minValue": 20,
+                            "maxValue": 200,
+                            "defaultValue": 50
                         }
                     ],
                     "stateTypes": [
