@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.10.0) jammy; urgency=medium
+
+  [ Simon Stürz ]
+  * Make battery capacity configurable for simulated cars
+
+ -- jenkins <developer@nymea.io>  Wed, 19 Jun 2024 11:00:40 +0200
+
 nymea-plugins-simulation (1.9.2) jammy; urgency=medium
 
 
