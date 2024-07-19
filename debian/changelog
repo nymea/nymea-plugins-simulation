@@ -1,3 +1,11 @@
+nymea-plugins-simulation (1.9.3) jammy; urgency=medium
+
+  [ Simon Stürz ]
+  * Make battery capacity configurable for simulated cars
+  * Update debian packaging and compat level
+
+ -- jenkins <developer@nymea.io>  Fri, 19 Jul 2024 21:06:18 +0200
+
 nymea-plugins-simulation (1.9.2) jammy; urgency=medium
 
 
