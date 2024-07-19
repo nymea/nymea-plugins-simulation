@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: nymea-plugins
+Upstream-Name: nymea-plugins-simulation
 Upstream-Contact: nymea GmbH <contact@nymea.io>
-Copyright: 2019, guh GmbH
+Copyright: 2019 - 2024, nymea GmbH
 Download: http://www.github.com/nymea/nymea-plugins-simulation
 Source: https://github.com/nymea/nymea-plugins-simulation.git
 
