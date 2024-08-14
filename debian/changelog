@@ -1,3 +1,8 @@
+nymea-plugins-simulation (1.9.4) jammy; urgency=medium
+
+
+ -- jenkins <developer@nymea.io>  Wed, 14 Aug 2024 18:35:15 +0200
+
 nymea-plugins-simulation (1.9.3) jammy; urgency=medium
 
   [ Simon Stürz ]
