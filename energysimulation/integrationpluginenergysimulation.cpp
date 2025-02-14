@@ -125,7 +125,9 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
             info->thing()->setStateValue(wallboxMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
         }
         if (info->action().actionTypeId() == wallboxDesiredPhaseCountActionTypeId) {
-            info->thing()->setStateValue(wallboxDesiredPhaseCountStateTypeId, info->action().paramValue(wallboxDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt());
+            uint desiredPhaseCount = info->action().paramValue(wallboxDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt();
+            qCDebug(dcEnergySimulation()) << "Setting desired phase count to" << desiredPhaseCount;
+            info->thing()->setStateValue(wallboxDesiredPhaseCountStateTypeId, desiredPhaseCount);
         }
     }
     if (info->thing()->thingClassId() == apiCarThingClassId || info->thing()->thingClassId() == genericCarThingClassId) {
@@ -175,8 +177,11 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         if (info->action().actionTypeId() == simpleHeatPumpPowerActionTypeId) {
             info->thing()->setStateValue(simpleHeatPumpPowerStateTypeId, info->action().paramValue(simpleHeatPumpPowerActionPowerParamTypeId).toBool());
         }
+    } else if (info->thing()->thingClassId() == manualConsumerThingClassId) {
+        if (info->action().actionTypeId() == manualConsumerCurrentPowerActionTypeId) {
+            info->thing()->setStateValue(manualConsumerCurrentPowerStateTypeId, info->action().paramValue(manualConsumerCurrentPowerActionCurrentPowerParamTypeId).toInt());
+        }
     }
-
 
     info->finish(Thing::ThingErrorNoError);
 }
@@ -433,14 +438,12 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     totalPhasesConsumption["B"] += 100 + (qrand() % 10);
     totalPhasesConsumption["C"] += 100 + (qrand() % 10);
 
-
-
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
         if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
             QString phase = consumer->setting("phase").toString();
             double currentPower = consumer->stateValue("currentPower").toDouble();
-            if (phase == "All") {
+            if (phase == "All" || "ABC") {
                 qCDebug(dcEnergySimulation()) << "Adding" << currentPower / 3 << "per phase for" << consumer->name();
                 totalPhasesConsumption["A"] += currentPower / 3;
                 totalPhasesConsumption["B"] += currentPower / 3;
@@ -451,7 +454,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             }
         }
     }
-
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
     double totalProduction = 0;

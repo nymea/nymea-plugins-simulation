@@ -383,6 +383,43 @@
                     ]
                 },
                 {
+                    "id": "bd8271a1-cf21-46fe-9780-f24fdb492e04",
+                    "name": "manualConsumer",
+                    "displayName": "Simulated consumer",
+                    "createMethods": ["user"],
+                    "interfaces": ["smartmeterconsumer"],
+                    "settingsTypes": [
+                        {
+                            "id": "10b224c7-6a53-49b4-8298-a7673fbfaaeb",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "AB", "AC", "BC", "ABC"],
+                            "defaultValue": "A"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "b12f0291-13cb-427d-b4b4-925c0c9e4184",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "30c2af15-4685-484e-9874-51741cba6a08",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "displayNameAction": "Set current power consumption",
+                            "type": "double",
+                            "unit": "Watt",
+                            "writable": true,
+                            "defaultValue": 0
+                        }
+                    ]
+                },
+                {
                     "id": "be175640-c2eb-462c-87ec-45d29ec120cd",
                     "name": "fridge",
                     "displayName": "Simulated fridge",
