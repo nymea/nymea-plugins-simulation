@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.11.0) jammy; urgency=medium
+
+  [ Simon Stürz ]
+  * energy: Add free selectable consumer
+
+ -- jenkins <developer@nymea.io>  Thu, 20 Feb 2025 15:23:34 +0100
+
 nymea-plugins-simulation (1.10.0) jammy; urgency=medium
 
 
