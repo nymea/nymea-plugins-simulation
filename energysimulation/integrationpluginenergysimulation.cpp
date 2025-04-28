@@ -124,6 +124,13 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         if (info->action().actionTypeId() == wallboxMaxChargingCurrentActionTypeId) {
             info->thing()->setStateValue(wallboxMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
         }
+        if (info->action().actionTypeId() == wallboxConnectActionTypeId) {
+            info->thing()->setStateValue(wallboxConnectedStateTypeId, true);
+        }
+        if (info->action().actionTypeId() == wallboxDisconnectActionTypeId) {
+            info->thing()->setStateValue(wallboxConnectedStateTypeId, false);
+        }
+
         if (info->action().actionTypeId() == wallboxDesiredPhaseCountActionTypeId) {
             uint desiredPhaseCount = info->action().paramValue(wallboxDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt();
             qCDebug(dcEnergySimulation()) << "Setting desired phase count to" << desiredPhaseCount;

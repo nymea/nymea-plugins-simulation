@@ -22,7 +22,7 @@
                     "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
-                    "interfaces": ["evcharger", "smartmeterconsumer"],
+                    "interfaces": ["evcharger", "smartmeterconsumer", "connectable"],
                     "settingsTypes": [
                         {
                             "id": "73df6376-2495-4d61-a832-6de922528c6a",
@@ -41,7 +41,14 @@
                             "defaultValue": 63
                         }
                     ],
-                    "stateTypes":[
+                    "stateTypes": [
+                        {
+                            "id": "e8c8cda6-c343-4914-9491-2ab8d9b1a017",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
                         {
                             "id": "568ad91a-c6b3-4b20-82d9-ea5afe38c209",
                             "name": "power",
@@ -115,6 +122,18 @@
                             "possibleValues": [1, 3],
                             "defaultValue": 3,
                             "writable": true
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "c923510a-f232-4ae3-a63f-21c2de2f4e37",
+                            "name": "connect",
+                            "displayName": "Connect wallbox"
+                        },
+                        {
+                            "id": "3bd40690-f726-47c7-b52b-779d1d8933f3",
+                            "name": "disconnect",
+                            "displayName": "Disconnect wallbox"
                         }
                     ]
                 },
