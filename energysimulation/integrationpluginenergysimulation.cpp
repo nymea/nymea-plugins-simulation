@@ -81,6 +81,22 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         });
     }
 
+
+    if (thing->thingClassId() == wallboxDcThingClassId) {
+        connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
+            if (settingTypeId == wallboxDcSettingsBidirectionalParamTypeId) {
+                bool bidirectional = value.toBool();
+                if (bidirectional) {
+                    thing->setStateValue(wallboxDcChargingCapabilitiesStateTypeId, "bidirectional");
+                } else {
+                    thing->setStateValue(wallboxDcChargingCapabilitiesStateTypeId, "charging");
+                }
+            }
+
+            updateSimulation();
+        });
+    }
+
     if (thing->thingClassId() == stoveThingClassId) {
         // Init property for simulation
         thing->setProperty("simulationActive", false);
@@ -117,6 +133,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
             info->thing()->setStateValue(stovePowerStateTypeId, info->action().paramValue(stovePowerActionPowerParamTypeId).toBool());
         }
     }
+
     if (info->thing()->thingClassId() == wallboxThingClassId) {
         if (info->action().actionTypeId() == wallboxPowerActionTypeId) {
             info->thing()->setStateValue(wallboxPowerStateTypeId, info->action().paramValue(wallboxPowerActionPowerParamTypeId).toBool());
@@ -137,6 +154,35 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
             info->thing()->setStateValue(wallboxDesiredPhaseCountStateTypeId, desiredPhaseCount);
         }
     }
+
+    if (info->thing()->thingClassId() == wallboxDcThingClassId) {
+        if (info->action().actionTypeId() == wallboxDcPowerActionTypeId) {
+            info->thing()->setStateValue(wallboxDcPowerStateTypeId, info->action().paramValue(wallboxDcPowerActionPowerParamTypeId).toBool());
+        }
+
+        if (info->action().actionTypeId() == wallboxDcChargingPowerActionTypeId) {
+            info->thing()->setStateValue(wallboxDcChargingPowerStateTypeId, info->action().paramValue(wallboxDcChargingPowerActionChargingPowerParamTypeId).toDouble());
+        }
+
+        if (info->action().actionTypeId() == wallboxDcCarPlugInActionTypeId) {
+            info->thing()->setStateValue(wallboxDcPluggedInStateTypeId, info->action().paramValue(wallboxDcCarPlugInActionPluggedInParamTypeId).toBool());
+        }
+
+
+        // For testing
+        if (info->action().actionTypeId() == wallboxDcConnectActionTypeId) {
+            info->thing()->setStateValue(wallboxDcConnectedStateTypeId, true);
+        }
+
+        if (info->action().actionTypeId() == wallboxDcDisconnectActionTypeId) {
+            info->thing()->setStateValue(wallboxDcConnectedStateTypeId, false);
+        }
+
+        if (info->action().actionTypeId() == wallboxDcBatterySocActionTypeId) {
+            info->thing()->setStateValue(wallboxDcBatteryLevelStateTypeId, info->action().paramValue(wallboxDcBatterySocActionSocParamTypeId).toInt());
+        }
+    }
+
     if (info->thing()->thingClassId() == apiCarThingClassId || info->thing()->thingClassId() == genericCarThingClassId) {
         if (info->action().actionTypeId() == apiCarPluggedInActionTypeId || info->action().actionTypeId() == genericCarPluggedInActionTypeId) {
             ParamTypeId pluggedInParamTypeId = info->thing()->thingClass().actionTypes().findByName("pluggedIn").paramTypes().findByName("pluggedIn").id();
@@ -282,6 +328,115 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
+    // Update DC evchargers
+    foreach (Thing* evCharger, myThings().filterByThingClassId(wallboxDcThingClassId)) {
+        if (evCharger->stateValue(wallboxDcPluggedInStateTypeId).toBool() && evCharger->stateValue(wallboxDcPowerStateTypeId).toBool()) {
+
+            QDateTime lastChargeUpdateTime = evCharger->property("lastChargeUpdateTime").toDateTime();
+            double capacity = evCharger->setting(wallboxDcSettingsCapacityParamTypeId).toDouble();
+            uint soc = evCharger->stateValue(wallboxDcBatteryLevelStateTypeId).toUInt();
+
+            if (evCharger->setting(wallboxDcSettingsBidirectionalParamTypeId).toBool()) {
+                evCharger->setStateValue(wallboxDcChargingCapabilitiesStateTypeId, "bidirectional");
+            } else {
+                evCharger->setStateValue(wallboxDcChargingCapabilitiesStateTypeId, "charging");
+            }
+
+            double chargingPower = evCharger->stateValue(wallboxDcChargingPowerStateTypeId).toDouble();
+
+            if (chargingPower > 0) {
+                evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "charging");
+
+                // We are charging the car, add soc
+                double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
+                double chargedWattHours = chargingPower * chargingTimeHours;
+                // cWH : cap = x : 100
+                double chargedPercentage = chargedWattHours / 1000 * 100 / capacity;
+                qCDebug(dcEnergySimulation()) << "* #### Update SoC";
+                qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
+                qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
+
+                evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, chargingPower + (chargingPower * evCharger->setting(wallboxDcSettingsEnergyLossParamTypeId).toDouble() / 100.0));
+
+                // We calcualte the AC side of charging and discharging energy
+                double totalEnergyConsumed = evCharger->stateValue(wallboxDcTotalEnergyConsumedStateTypeId).toDouble();
+                totalEnergyConsumed += (qAbs(evCharger->stateValue(wallboxDcCurrentPowerStateTypeId).toDouble()) / 1000) / 60 / 60 * 5;
+                qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyConsumed << "kWh";
+                evCharger->setStateValue(wallboxDcTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+
+                double currentBatteryLevel = 0;
+                QVariant batteryVariant = evCharger->property("batteryLevel");
+                if (batteryVariant.isValid()) {
+                    currentBatteryLevel = batteryVariant.toDouble();
+                } else {
+                    currentBatteryLevel = evCharger->stateValue("batteryLevel").toInt();
+                    evCharger->setProperty("batteryLevel", currentBatteryLevel);
+                }
+
+                double newBatteryLevel = qMin(currentBatteryLevel + chargedPercentage, 100.0);
+                evCharger->setProperty("batteryLevel", newBatteryLevel);
+                evCharger->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
+                evCharger->setStateValue("batteryLevel", qRound(newBatteryLevel));
+                evCharger->setStateValue("batteryCritical", evCharger->stateValue("batteryLevel").toInt() < 10);
+
+            } else if (chargingPower < 0) {
+                evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "discharging");
+
+                // We are charging the car, add soc
+                double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
+                double chargedWattHours = chargingPower * chargingTimeHours;
+                // cWH : cap = x : 100
+                double chargedPercentage = chargedWattHours / 1000 * 100 / capacity;
+                qCDebug(dcEnergySimulation()) << "* #### Update SoC";
+                qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
+                qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
+                evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, chargingPower + (chargingPower * evCharger->setting(wallboxDcSettingsEnergyLossParamTypeId).toDouble() / 100.0));
+
+                // We calcualte the AC side of charging and discharging energy
+                double totalEnergyProduced = evCharger->stateValue(wallboxDcTotalEnergyProducedStateTypeId).toDouble();
+                totalEnergyProduced += (qAbs(evCharger->stateValue(wallboxDcCurrentPowerStateTypeId).toDouble()) / 1000) / 60 / 60 * 5;
+                qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyProduced << "kWh";
+                evCharger->setStateValue(wallboxDcTotalEnergyProducedStateTypeId, totalEnergyProduced);
+
+                double currentBatteryLevel = 0;
+                QVariant batteryVariant = evCharger->property("batteryLevel");
+                if (batteryVariant.isValid()) {
+                    currentBatteryLevel = batteryVariant.toDouble();
+                } else {
+                    currentBatteryLevel = evCharger->stateValue("batteryLevel").toInt();
+                    evCharger->setProperty("batteryLevel", currentBatteryLevel);
+                }
+
+                double newBatteryLevel = currentBatteryLevel + chargedPercentage;
+                evCharger->setProperty("batteryLevel", newBatteryLevel);
+                evCharger->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
+                evCharger->setStateValue("batteryLevel", qRound(newBatteryLevel));
+                evCharger->setStateValue("batteryCritical", evCharger->stateValue("batteryLevel").toInt() < 10);
+
+            } else {
+                // Charging power is 0
+                evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "idle");
+                evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, 0);
+            }
+
+            if (soc >= 100) {
+                // Fully charged, no energy flow
+                evCharger->setStateValue(wallboxDcBatteryLevelStateTypeId, 100);
+                evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "idle");
+                evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, 0);
+            } else if (soc < 10) {
+                // Empty, cannot discharge more...
+                evCharger->setStateValue(wallboxDcBatteryLevelStateTypeId, 100);
+                evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "idle");
+                evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, 0);
+            }
+
+        } else {
+            evCharger->setStateValue(wallboxDcChargingStateStateTypeId, "idle");
+            evCharger->setStateValue(wallboxDcCurrentPowerStateTypeId, 0);
+        }
+    }
+
     // Reduce battery level on all unplugged cars
     foreach (Thing *car, myThings().filterByInterface("electricvehicle")) {
         if (!car->stateValue("pluggedIn").toBool() && car->stateValue("batteryLevel").toInt() > 0) {
@@ -385,6 +540,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         heatPump->setStateValue(sgReadyHeatPumpCurrentPowerStateTypeId, currentPower);
         heatPump->setStateValue(sgReadyHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
     }
+
     foreach (Thing *heatPump, myThings().filterByThingClassId(simpleHeatPumpThingClassId)) {
         bool heatpumpEnabled = heatPump->stateValue(simpleHeatPumpPowerStateTypeId).toBool();
         QString phase = heatPump->setting(simpleHeatPumpSettingsPhaseParamTypeId).toString();
@@ -414,7 +570,6 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     /// Energy meter
     ////////////////////////////////////////////////////
 
-
     // Sum up production from inverters
     QHash<QString, double> totalPhaseProduction = {
         {"A", 0},
@@ -433,6 +588,22 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
+    // Add the discharging DC charger as production
+    foreach (Thing* evCharger, myThings().filterByThingClassId(wallboxDcThingClassId)) {
+        double power = evCharger->stateValue(wallboxDcCurrentPowerStateTypeId).toDouble();
+        // We handle consumer in a later step
+        if (power >= 0)
+            continue;
+
+        QString phase = evCharger->setting(wallboxDcSettingsPhaseParamTypeId).toString();
+        if (phase == "All") {
+            totalPhaseProduction["A"] += power / 3;
+            totalPhaseProduction["B"] += power / 3;
+            totalPhaseProduction["C"] += power / 3;
+        } else {
+            totalPhaseProduction[phase] += power;
+        }
+    }
 
     // Sum up consumption of all consumers
     QHash<QString, double> totalPhasesConsumption = {
@@ -440,6 +611,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         {"B", 0},
         {"C", 0}
     };
+
     // Simulate a base consumption of 300W (100 on each phase) + 10W jitter
     totalPhasesConsumption["A"] += 100 + (qrand() % 10);
     totalPhasesConsumption["B"] += 100 + (qrand() % 10);
@@ -461,6 +633,23 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             }
         }
     }
+
+    // Add the discharging DC charger as production
+    foreach (Thing* evCharger, myThings().filterByThingClassId(wallboxDcThingClassId)) {
+        double power = evCharger->stateValue(wallboxDcCurrentPowerStateTypeId).toDouble();
+        if (power <= 0)
+            continue;
+
+        QString phase = evCharger->setting(wallboxDcSettingsPhaseParamTypeId).toString();
+        if (phase == "All") {
+            totalPhasesConsumption["A"] += power / 3;
+            totalPhasesConsumption["B"] += power / 3;
+            totalPhasesConsumption["C"] += power / 3;
+        } else {
+            totalPhaseProduction[phase] += power;
+        }
+    }
+
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
     double totalProduction = 0;
@@ -539,6 +728,8 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             battery->setStateValue(batteryCurrentPowerStateTypeId, 0);
         }
     }
+
+
 
 
     // Sum up all phases *again* after the battery has been facored in

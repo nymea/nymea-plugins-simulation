@@ -138,6 +138,217 @@
                     ]
                 },
                 {
+                    "name": "wallboxDc",
+                    "displayName": "Simulated DC wallbox",
+                    "id": "394ed5bc-2ca7-4243-871a-8c3645290d22",
+                    "createMethods": ["discovery", "user"],
+                    "interfaces": [ "evchargerdc", "connectable"],
+                    "settingsTypes": [
+                        {
+                            "id": "8ce1b971-1a99-42d1-b04c-6b9d8c1adc3d",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        },
+                        {
+                            "id": "6c2f5535-23b9-4cec-bf12-1d6e32fbf2de",
+                            "name": "energyLoss",
+                            "displayName": "Energy loss (AC/DC)",
+                            "type": "double",
+                            "minValue": 0,
+                            "maxValue": 50,
+                            "unit": "Percentage",
+                            "defaultValue": 10.0
+                        },
+                        {
+                            "id": "b9111649-475d-4e8f-9d47-422838cd194c",
+                            "name": "bidirectional",
+                            "displayName": "Bidirectional charging",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "dd1f3ff6-4232-4033-b770-782f8e418e16",
+                            "name": "capacity",
+                            "displayName": "Car battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 80
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "fe39be10-3d59-492b-b55f-33bbb59922d2",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
+                        {
+                            "id": "faefa341-e275-4b6d-80ae-15cbf470dda4",
+                            "name": "power",
+                            "displayName": "Charging enabled",
+                            "displayNameAction": "Enable/disable charging",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "writable": true
+                        },
+                        {
+                            "id": "0d580985-3d5b-4dd7-b9b3-2bb1a6a07b4e",
+                            "name": "currentPower",
+                            "displayName": "Measured power (AC side)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "fe868eb4-eb5a-41b4-a36d-f64c543f002c",
+                            "name": "chargingPower",
+                            "displayName": "Charging power",
+                            "displayNameAction": "Set charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "writable": true
+                        },
+                        {
+                            "id": "878cc589-1717-4a23-9493-f0f091ad4aeb",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "c7641fd2-39dd-48fc-b9c5-97edb153f2be",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 50
+                        },
+                        {
+                            "id": "42b81783-288b-4740-8cc5-bbc590de5e03",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "82e1803b-d656-4057-9775-b8317137083b",
+                            "name": "minChargingPower",
+                            "displayName": "Minimal charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 100
+                        },
+                        {
+                            "id": "d83b9be8-5374-4bf1-802e-d473bd25ed92",
+                            "name": "maxChargingPower",
+                            "displayName": "Maximal charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 50000
+                        },
+                        {
+                            "id": "9fdc2e91-01c2-417d-8dd1-3762d2978076",
+                            "name": "minDischargingPower",
+                            "displayName": "Minimal discharging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": -100
+                        },
+                        {
+                            "id": "3c77043a-de3b-41b9-bd45-3d87616fe9ce",
+                            "name": "maxDischargingPower",
+                            "displayName": "Maximal discharging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": -50000
+                        },
+                        {
+                            "id": "1f32d35c-8f54-4e88-bb4f-d02bbd57d816",
+                            "name": "pluggedIn",
+                            "displayName": "Car is plugged in",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "cached": false
+                        },
+                        {
+                            "id": "8bd37232-65e3-43d1-8770-1643fdb930c2",
+                            "name": "chargingCapabilities",
+                            "displayName": "Charging capabilities",
+                            "type": "QString",
+                            "possibleValues": ["charging", "discharging", "bidirectional"],
+                            "defaultValue": "charging",
+                            "cached": false
+                        },
+                        {
+                            "id": "ba589f2c-2e04-44f0-b520-19c97af70225",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "373cdeba-c63c-4c64-8a1e-e2f4b1705918",
+                            "name": "totalEnergyProduced",
+                            "displayName": "Total returned energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "fbb8b809-a68a-4464-b883-d9ae0a990bc7",
+                            "name": "connect",
+                            "displayName": "Connect charger"
+                        },
+                        {
+                            "id": "c53b9939-d6d5-4b47-8815-6835186f33b7",
+                            "name": "disconnect",
+                            "displayName": "Disconnect charger"
+                        },
+                        {
+                            "id": "b3720f48-6280-4a24-af64-9891fadcd6a8",
+                            "name": "batterySoc",
+                            "displayName": "Set battery SoC",
+                            "paramTypes": [
+                                {
+                                    "id": "142b3593-6c44-4606-8482-26c180a0bae8",
+                                    "name": "soc",
+                                    "displayName": "State of charge",
+                                    "type": "int",
+                                    "unit": "Percentage",
+                                    "minValue": 10,
+                                    "maxValue": 100,
+                                    "defaultValue": 50
+                                }
+                            ]
+                        },
+                        {
+                            "id": "543e6952-4876-4d27-bb4f-dfd505d64b74",
+                            "name": "carPlugIn",
+                            "displayName": "Plug/Unplug car",
+                            "paramTypes": [
+                                {
+                                    "id": "8ea36ad4-e397-4e4f-9178-4021b490e2c4",
+                                    "name": "pluggedIn",
+                                    "displayName": "Plugged in",
+                                    "type": "bool",
+                                    "defaultValue": true
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "solarInverter",
                     "displayName": "Simulated solar inverter",
                     "id": "f1e91782-8bc1-4bcb-a07e-e66b01fe7be5",
