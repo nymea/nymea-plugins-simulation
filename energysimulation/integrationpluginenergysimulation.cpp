@@ -148,6 +148,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                         wallbox->setProperty("connectedCarThingId", info->thing()->id());
                         info->thing()->setStateValue("pluggedIn", true);
                         wallbox->setStateValue(wallboxPluggedInStateTypeId, true);
+                        wallbox->setStateValue(wallboxSessionEnergyStateTypeId, 0);
                         info->finish(Thing::ThingErrorNoError);
                         return;
                     }
@@ -162,6 +163,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
                     if (wallbox->property("connectedCarThingId").toUuid() == info->thing()->id()) {
                         wallbox->setProperty("connectedCarThingId", QUuid());
                         wallbox->setStateValue(wallboxPluggedInStateTypeId, false);
+                        wallbox->setStateValue(wallboxSessionEnergyStateTypeId, 0);
                         break;
                     }
                 }
@@ -195,7 +197,7 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 
 void IntegrationPluginEnergySimulation::updateSimulation()
 {
-    qCDebug(dcEnergySimulation()) << "*******************  Adjusting simulation" << QDateTime::currentDateTime().toString();
+    qCDebug(dcEnergySimulation()) << "******************* Adjusting simulation" << QDateTime::currentDateTime().toString();
 
     // Update solar inverters
     foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
@@ -258,9 +260,15 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
                 evCharger->setStateValue(wallboxCurrentPowerStateTypeId, chargingPower);
                 double totalEnergyConsumed = evCharger->stateValue(wallboxTotalEnergyConsumedStateTypeId).toDouble();
-                totalEnergyConsumed += (chargingPower / 1000) / 60 / 60 * 5;
+                double chargedEnergy = (chargingPower / 1000) / 60 / 60 * 5;
+                totalEnergyConsumed += chargedEnergy;
+                double sessionEnergy = evCharger->stateValue(wallboxSessionEnergyStateTypeId).toDouble();
+                sessionEnergy += chargedEnergy;
+
                 qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyConsumed << "kWh";
+                qCDebug(dcEnergySimulation()) << "* # session:" << sessionEnergy << "kWh";
                 evCharger->setStateValue(wallboxTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
+                evCharger->setStateValue(wallboxSessionEnergyStateTypeId, sessionEnergy);
 
                 if (car->thingClassId() == apiCarThingClassId) {
                     if (chargedPercentage >= 1) {
