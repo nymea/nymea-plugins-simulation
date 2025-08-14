@@ -1,0 +1,60 @@
+Source: nymea-plugins-simulation
+Section: utils
+Priority: optional
+Maintainer: nymea GmbH <developer@nymea.io>
+Standards-Version: 4.7.2
+Build-depends: debhelper,
+               libnymea-dev,
+               pkg-config,
+               qt6-base-dev,
+               qt6-base-dev-tools,
+               nymea-dev-tools:native,
+
+
+Package: nymea-plugin-appliances-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: nymea.io simulation plugin for appliances
+ This plugin simulates household appliances such as dish washers or cleaning robots.
+
+
+Package: nymea-plugin-closables-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: nymea.io simulation plugin for things that can be opened and closed.
+ This plugin simulates closable devices such as blinds, shutters, awnings and garages.
+
+
+Package: nymea-plugin-energy-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: nymea.io simulation plugin for energy use cases
+ This plugin simulates energy related devices such as solar inverters,
+ evchargers, energy meters and several other consumers.
+
+
+Package: nymea-plugin-heating-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: nymea.io simulation plugin for heating use cases
+ This plugin simulates heating devices and systems such as smiple heating rods,
+ thermostats and heat pumps
+
+
+Package: nymea-plugin-sensors-simulation
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: nymea.io simulation plugin for sensors
+ This plugin simulates sensors such as temperature- and humidity sensors,
+ motion sensors etc.
+
