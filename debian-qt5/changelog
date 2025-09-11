@@ -1,3 +1,11 @@
+nymea-plugins-simulation (1.12.0) jammy; urgency=medium
+
+  [ Simon Stürz ]
+  * energy: Add session energy to EV charger
+  * Add Qt6 support
+
+ -- jenkins <developer@nymea.io>  Thu, 11 Sep 2025 14:25:25 +0200
+
 nymea-plugins-simulation (1.11.1) jammy; urgency=medium
 
   [ Simon Stürz ]
