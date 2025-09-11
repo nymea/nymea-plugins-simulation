@@ -49,7 +49,7 @@ IntegrationPluginAppliancesSimulation::~IntegrationPluginAppliancesSimulation()
 void IntegrationPluginAppliancesSimulation::init()
 {
     // Seed the random generator with current time
-    qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
+    std::srand(QDateTime::currentMSecsSinceEpoch() / 1000);
 
     // Change some values every 20 seconds
     m_pluginTimer20Seconds = hardwareManager()->pluginTimerManager()->registerTimer(20);
@@ -128,7 +128,7 @@ void IntegrationPluginAppliancesSimulation::executeAction(ThingActionInfo *info)
 
 int IntegrationPluginAppliancesSimulation::generateRandomIntValue(int min, int max)
 {
-    int value = ((qrand() % ((max + 1) - min)) + min);
+    int value = ((std::rand() % ((max + 1) - min)) + min);
     // qCDebug(dcSimulation()) << "Generateed random int value: [" << min << ", " << max << "] -->" << value;
     return value;
 }

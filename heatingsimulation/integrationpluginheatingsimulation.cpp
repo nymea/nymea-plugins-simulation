@@ -160,7 +160,7 @@ void IntegrationPluginHeatingSimulation::onPluginTimer1Minute()
         if (thing->thingClassId() == ventilationThingClassId) {
             bool autoVentilation = thing->stateValue(ventilationAutoStateTypeId).toBool();
             if (autoVentilation) {
-                int newLevel = qrand() % 4;
+                int newLevel = std::rand() % 4;
                 thing->setStateValue(ventilationPowerStateTypeId, newLevel > 0);
                 if (newLevel > 0) {
                     thing->setStateValue(ventilationFlowRateStateTypeId, newLevel);

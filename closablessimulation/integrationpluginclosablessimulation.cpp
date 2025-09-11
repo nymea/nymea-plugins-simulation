@@ -48,7 +48,7 @@ IntegrationPluginSimulation::~IntegrationPluginSimulation()
 void IntegrationPluginSimulation::init()
 {
     // Seed the random generator with current time
-    qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
+    std::srand(QDateTime::currentMSecsSinceEpoch() / 1000);
 }
 
 void IntegrationPluginSimulation::setupThing(ThingSetupInfo *info)
@@ -277,7 +277,7 @@ void IntegrationPluginSimulation::executeAction(ThingActionInfo *info)
 
 int IntegrationPluginSimulation::generateRandomIntValue(int min, int max)
 {
-    int value = ((qrand() % ((max + 1) - min)) + min);
+    int value = ((std::rand() % ((max + 1) - min)) + min);
     // qCDebug(dcSimulation()) << "Generateed random int value: [" << min << ", " << max << "] -->" << value;
     return value;
 }
@@ -348,10 +348,10 @@ qreal IntegrationPluginSimulation::generateNoisyRectangle(int min, int max, int 
     qCDebug(dcClosablesSimulation()) << "Generating noisy rect:" << min << "-" << max << "lastValue:" << lastValue << "lastUpdate" << lastChangeTimestamp << lastChangeTimestamp.secsTo(now) << lastChangeTimestamp.isValid();
     if (!lastChangeTimestamp.isValid() || lastChangeTimestamp.secsTo(now) / 60 > stablePeriodInMinutes) {
         lastChangeTimestamp.swap(now);
-        lastValue = min + qrand() % (max - min);
+        lastValue = min + std::rand() % (max - min);
         qCDebug(dcClosablesSimulation()) << "New last value:" << lastValue;
     }
-    qreal noise = 0.1 * (qrand() % (maxNoise * 20)  - maxNoise);
+    qreal noise = 0.1 * (std::rand() % (maxNoise * 20)  - maxNoise);
     qreal ret = 1.0 * lastValue + noise;
     return ret;
 }

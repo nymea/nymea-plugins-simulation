@@ -50,7 +50,7 @@ IntegrationPluginSensorsSimulation::~IntegrationPluginSensorsSimulation()
 void IntegrationPluginSensorsSimulation::init()
 {
     // Seed the random generator with current time
-    qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
+    std::srand(QDateTime::currentMSecsSinceEpoch() / 1000);
 
     // Change some values every 20 seconds
     m_pluginTimer20Seconds = hardwareManager()->pluginTimerManager()->registerTimer(20);
@@ -165,7 +165,7 @@ void IntegrationPluginSensorsSimulation::executeAction(ThingActionInfo *info)
 
 int IntegrationPluginSensorsSimulation::generateRandomIntValue(int min, int max)
 {
-    int value = ((qrand() % ((max + 1) - min)) + min);
+    int value = ((std::rand() % ((max + 1) - min)) + min);
     // qCDebug(dcSimulation()) << "Generateed random int value: [" << min << ", " << max << "] -->" << value;
     return value;
 }
@@ -236,10 +236,10 @@ qreal IntegrationPluginSensorsSimulation::generateNoisyRectangle(int min, int ma
     qCDebug(dcSensorsSimulation()) << "Generating noisy rect:" << min << "-" << max << "lastValue:" << lastValue << "lastUpdate" << lastChangeTimestamp << lastChangeTimestamp.secsTo(now) << lastChangeTimestamp.isValid();
     if (!lastChangeTimestamp.isValid() || lastChangeTimestamp.secsTo(now) / 60 > stablePeriodInMinutes) {
         lastChangeTimestamp.swap(now);
-        lastValue = min + qrand() % (max - min);
+        lastValue = min + std::rand() % (max - min);
         qCDebug(dcSensorsSimulation()) << "New last value:" << lastValue;
     }
-    qreal noise = 0.1 * (qrand() % (maxNoise * 20)  - maxNoise);
+    qreal noise = 0.1 * (std::rand() % (maxNoise * 20)  - maxNoise);
     qreal ret = 1.0 * lastValue + noise;
     return ret;
 }
@@ -272,7 +272,7 @@ void IntegrationPluginSensorsSimulation::onPluginTimer20Seconds()
             thing->setStateValue(gardenSensorConnectedStateTypeId, true);
         } else if(thing->thingClassId() == weatherStationThingClassId) {
             // Netatmo
-            thing->setStateValue(weatherStationUpdateTimeStateTypeId, QDateTime::currentDateTime().toTime_t());
+            thing->setStateValue(weatherStationUpdateTimeStateTypeId, QDateTime::currentDateTime().toSecsSinceEpoch());
             thing->setStateValue(weatherStationHumidityStateTypeId, generateSinValue(35, 45, 13));
             thing->setStateValue(weatherStationTemperatureStateTypeId, generateSinValue(20, 25, 3));
             thing->setStateValue(weatherStationPressureStateTypeId, generateSinValue(1003, 1008, 8));
@@ -302,16 +302,16 @@ void IntegrationPluginSensorsSimulation::simulationTimerTimeout()
     QTimer *t = static_cast<QTimer*>(sender());
     Thing *thing = m_simulationTimers.key(t);
     if (thing->thingClassId() == fingerPrintSensorThingClassId) {
-        EventTypeId evt = qrand() % 2 == 0 ? fingerPrintSensorAccessGrantedEventTypeId : fingerPrintSensorAccessDeniedEventTypeId;
+        EventTypeId evt = std::rand() % 2 == 0 ? fingerPrintSensorAccessGrantedEventTypeId : fingerPrintSensorAccessDeniedEventTypeId;
         ParamList params;
         if (evt == fingerPrintSensorAccessGrantedEventTypeId) {
             QStringList users = thing->stateValue(fingerPrintSensorUsersStateTypeId).toStringList();
-            QString user = users.at(qrand() % users.count());
+            QString user = users.at(std::rand() % users.count());
             QSettings settings;
             settings.beginGroup(thing->id().toString());
             QStringList fingers = settings.value(user).toStringList();
             params.append(Param(fingerPrintSensorAccessGrantedEventUserIdParamTypeId, user));
-            QString finger = fingers.at(qrand() % fingers.count());
+            QString finger = fingers.at(std::rand() % fingers.count());
             params.append(Param(fingerPrintSensorAccessGrantedEventFingerParamTypeId, finger));
             qCDebug(dcSensorsSimulation()) << "Emitting fingerprint accepted for user" << user << "and finger" << finger;
         } else {
@@ -353,10 +353,10 @@ void IntegrationPluginSensorsSimulation::simulationTimerTimeout()
            thing->setStateValue(contactSensorBatteryCriticalStateTypeId, false);
        }
     } else if (thing->thingClassId() == waterSensorThingClassId) {
-        bool wet = qrand() > (RAND_MAX / 2);
+        bool wet = std::rand() > (RAND_MAX / 2);
         thing->setStateValue(waterSensorWaterDetectedStateTypeId, wet);
     } else if (thing->thingClassId() == vibrationSensorThingClassId) {
-        bool yes = qrand() < (RAND_MAX / 4);
+        bool yes = std::rand() < (RAND_MAX / 4);
         if (yes) {
             thing->emitEvent(vibrationSensorVibrationDetectedEventTypeId);
         }

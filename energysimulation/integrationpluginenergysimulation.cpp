@@ -86,7 +86,7 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         thing->setProperty("simulationActive", false);
     }
     if (thing->thingClassId() == fridgeThingClassId) {
-        thing->setProperty("simulationCycle", qrand() % 360);
+        thing->setProperty("simulationCycle", std::rand() % 360);
     }
 
     if (thing->thingClassId() == genericCarThingClassId) {
@@ -372,14 +372,14 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         uint maxConsumption = heatPump->setting(sgReadyHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
         double currentPower = 0;
         if (operatingMode == "Off") {
-            currentPower = 10  + (qrand() % 5); // We need some energy since only the pump is off, not the controller
+            currentPower = 10  + (std::rand() % 5); // We need some energy since only the pump is off, not the controller
         } else if (operatingMode == "Low") {
-            currentPower = minConsumption + (qrand() % 20);
+            currentPower = minConsumption + (std::rand() % 20);
         } else if (operatingMode == "Standard") {
             // min + 60 % of the max min difference + 20W jitter
-            currentPower = minConsumption + (maxConsumption - minConsumption) * 0.6 + (qrand() % 20);
+            currentPower = minConsumption + (maxConsumption - minConsumption) * 0.6 + (std::rand() % 20);
         } else if (operatingMode == "High") {
-            currentPower = maxConsumption + (qrand() % 20); // 20W jitter
+            currentPower = maxConsumption + (std::rand() % 20); // 20W jitter
         }
 
         int cycle = heatPump->property("simulationCycle").toInt() % 12;
@@ -400,9 +400,9 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         uint maxConsumption = heatPump->setting(simpleHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
         double currentPower = 0;
         if (heatpumpEnabled) {
-            currentPower = maxConsumption - (qrand() % 50);
+            currentPower = maxConsumption - (std::rand() % 50);
         } else {
-            currentPower = qrand() % 50;
+            currentPower = std::rand() % 50;
         }
 
         int cycle = heatPump->property("simulationCycle").toInt() % 12;
@@ -449,9 +449,9 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         {"C", 0}
     };
     // Simulate a base consumption of 300W (100 on each phase) + 10W jitter
-    totalPhasesConsumption["A"] += 100 + (qrand() % 10);
-    totalPhasesConsumption["B"] += 100 + (qrand() % 10);
-    totalPhasesConsumption["C"] += 100 + (qrand() % 10);
+    totalPhasesConsumption["A"] += 100 + (std::rand() % 10);
+    totalPhasesConsumption["B"] += 100 + (std::rand() % 10);
+    totalPhasesConsumption["C"] += 100 + (std::rand() % 10);
 
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
@@ -677,5 +677,5 @@ QPair<QDateTime, QDateTime> IntegrationPluginEnergySimulation::calculateSunriseS
     QDateTime sunrise(dateTime.date(), QTime(hourRise, minuteRise));
     QDateTime sunset(dateTime.date(), QTime(hourSet, minuteSet));
 
-    return qMakePair<QDateTime, QDateTime>(sunrise, sunset);
+    return QPair<QDateTime, QDateTime>(sunrise, sunset);
 }
