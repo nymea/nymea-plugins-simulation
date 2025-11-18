@@ -1,3 +1,8 @@
+# nymea-plugins-simulation
+
 A collection of nymea plugins for simulated setups and demos.
 
-Main nymea repository: https://github.com/guh/nymea
+## License
+
+nymea-plugins-simulation is licensed under the terms of the GNU General Public
+License, version 3.0 or (at your option) any later version. 
