@@ -234,7 +234,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
                     car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
                     break;
                 }
-                uint maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toUInt();
+                double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
                 uint connectedPhaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
                 uint desiredPhaseCount = evCharger->stateValue(wallboxDesiredPhaseCountStateTypeId).toUInt();
                 uint carPhaseCount = car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1;
