@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.14.0) noble; urgency=medium
+
+  [ Simon Stürz ]
+  * Energy simulation: Update EV charger interface
+
+ -- jenkins <developer@nymea.io>  Mon, 12 Jan 2026 10:47:58 +0100
+
 nymea-plugins-simulation (1.13.0) jammy; urgency=medium
 
   [ Simon Stürz ]
