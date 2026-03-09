@@ -3,7 +3,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 *
 * Copyright (C) 2013 - 2024, nymea GmbH
-* Copyright (C) 2024 - 2025, chargebyte austria GmbH
+* Copyright (C) 2024 - 2026, chargebyte austria GmbH
 *
 * This file is part of nymea-plugins-simulation.
 *
@@ -25,12 +25,12 @@
 #ifndef INTEGRATIONPLUGINENERGYSIMULATION_H
 #define INTEGRATIONPLUGINENERGYSIMULATION_H
 
-#include "integrations/integrationplugin.h"
 #include "extern-plugininfo.h"
+#include "integrations/integrationplugin.h"
 
 class PluginTimer;
 
-class IntegrationPluginEnergySimulation: public IntegrationPlugin
+class IntegrationPluginEnergySimulation : public IntegrationPlugin
 {
     Q_OBJECT
 
@@ -50,12 +50,16 @@ private slots:
     void updateSimulation();
 
 private:
+    bool plugCarIntoWallbox(Thing *wallbox, Thing *car);
+    bool unplugCarFromWallbox(Thing *wallbox, const ThingId &carId);
+    double carCapacity(Thing *car);
+    double calculateChargedPercentage(Thing *car, double chargedWattHours);
+
     QPair<QDateTime, QDateTime> calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime);
 
 private:
     PluginTimer *m_timer = nullptr;
     PluginTimer *m_totalsTimer = nullptr;
-
 };
 
 #endif // INTEGRATIONPLUGINENERGYSIMULATION_H
