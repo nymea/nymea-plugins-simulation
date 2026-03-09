@@ -571,7 +571,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
             QString phase = consumer->setting("phase").toString();
             double currentPower = consumer->stateValue("currentPower").toDouble();
-            if (phase == "All" || "ABC") {
+            if (phase == "All" || phase == "ABC") {
                 qCDebug(dcEnergySimulation()) << "Adding" << currentPower / 3 << "per phase for" << consumer->name();
                 totalPhasesConsumption["A"] += currentPower / 3;
                 totalPhasesConsumption["B"] += currentPower / 3;
@@ -588,7 +588,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         double currentPower = evCharger->property("currentPower").toDouble();
         QString phase = evCharger->setting("phase").toString();
 
-        if (phase == "All" || "ABC") {
+        if (phase == "All" || phase == "ABC") {
             qCDebug(dcEnergySimulation()) << "Adding" << currentPower / 3 << "per phase for" << evCharger->name();
             totalPhasesConsumption["A"] += currentPower / 3;
             totalPhasesConsumption["B"] += currentPower / 3;
