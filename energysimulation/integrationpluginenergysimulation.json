@@ -67,7 +67,7 @@
                             "defaultValue": 6,
                             "minValue": 6,
                             "maxValue": 32,
-                            "stepSize": 1.0,
+                            "stepSize": 0.1,
                             "unit": "Ampere",
                             "writable": true
                         },
@@ -141,6 +141,111 @@
                         },
                         {
                             "id": "3bd40690-f726-47c7-b52b-779d1d8933f3",
+                            "name": "disconnect",
+                            "displayName": "Disconnect wallbox"
+                        }
+                    ]
+                },
+                {
+                    "name": "wallboxNoMeter",
+                    "displayName": "Simulated wallbox (no meter)",
+                    "id": "d26123e6-71f4-4cfe-bc61-5709be2293f0",
+                    "createMethods": ["discovery", "user"],
+                    "interfaces": ["evcharger", "connectable"],
+                    "settingsTypes": [
+                        {
+                            "id": "70b0efec-c12e-426f-98f8-0aa22c84380b",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        },
+                        {
+                            "id": "cc86d42b-4287-4cf4-b55e-a57cbbf330af",
+                            "name": "maxChargingCurrentUpperLimit",
+                            "displayName": "Upper limit for maximum charging current",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 63
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "52222a35-e682-4329-8162-331295706cef",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
+                        {
+                            "id": "a88a2c35-4799-43c7-a11a-cc9f4e46b678",
+                            "name": "power",
+                            "displayName": "Charging enabled",
+                            "displayNameAction": "Enable/disable charging",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "writable": true
+                        },
+                        {
+                            "id": "5bc3f079-7bba-4781-963c-992d3550c169",
+                            "name": "maxChargingCurrent",
+                            "displayName": "Maximum charging current",
+                            "displayNameAction": "Set maximum charging current",
+                            "type": "double",
+                            "defaultValue": 6,
+                            "minValue": 6,
+                            "maxValue": 32,
+                            "stepSize": 1.0,
+                            "unit": "Ampere",
+                            "writable": true
+                        },
+                        {
+                            "id": "9271e719-905e-4a6e-9dd5-1c9eb99dc252",
+                            "name": "pluggedIn",
+                            "displayName": "Car is plugged in",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "6c300adb-dc5c-4cd4-8a4a-5642ab58c2d7",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "b68460fa-d31f-4f1a-831e-5a3ad4dfba60",
+                            "name": "phaseCount",
+                            "displayName": "Active phases",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 1
+                        },
+                        {
+                            "id": "70ef11a0-e416-4160-be10-2dedfe3394fa",
+                            "name": "desiredPhaseCount",
+                            "displayName": "Desired phase count",
+                            "displayNameAction": "Set desired phase count",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "possibleValues": [1, 3],
+                            "defaultValue": 3,
+                            "writable": true
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "1310ac86-e93c-427e-aa67-1d91491f2d98",
+                            "name": "connect",
+                            "displayName": "Connect wallbox"
+                        },
+                        {
+                            "id": "ef413aed-c15b-434b-afd4-f85a26a8a62b",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
                         }
