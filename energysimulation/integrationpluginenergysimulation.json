@@ -67,7 +67,7 @@
                             "defaultValue": 6,
                             "minValue": 6,
                             "maxValue": 32,
-                            "stepSize": 1.0,
+                            "stepSize": 0.1,
                             "unit": "Ampere",
                             "writable": true
                         },
