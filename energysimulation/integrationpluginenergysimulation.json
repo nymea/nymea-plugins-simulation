@@ -264,7 +264,7 @@
                             "displayName": "Maximum capacity",
                             "unit": "Watt",
                             "type": "double",
-                            "defaultValue": 5000
+                            "defaultValue": 10000
                         },
                         {
                             "id": "39f902a6-8b16-4da2-86eb-e984735b426d",
@@ -769,7 +769,7 @@
                             "displayName": "Charging rate",
                             "type": "double",
                             "unit": "Watt",
-                            "defaultValue": 1000
+                            "defaultValue": 10000
                         },
                         {
                             "id": "0c86ab12-5046-4a51-9ff1-675309eb3386",
