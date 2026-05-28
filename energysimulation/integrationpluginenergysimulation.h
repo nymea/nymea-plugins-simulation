@@ -25,12 +25,12 @@
 #ifndef INTEGRATIONPLUGINENERGYSIMULATION_H
 #define INTEGRATIONPLUGINENERGYSIMULATION_H
 
-#include "extern-plugininfo.h"
 #include "integrations/integrationplugin.h"
+#include "extern-plugininfo.h"
 
 class PluginTimer;
 
-class IntegrationPluginEnergySimulation : public IntegrationPlugin
+class IntegrationPluginEnergySimulation: public IntegrationPlugin
 {
     Q_OBJECT
 
@@ -50,16 +50,26 @@ private slots:
     void updateSimulation();
 
 private:
-    bool plugCarIntoWallbox(Thing *wallbox, Thing *car);
-    bool unplugCarFromWallbox(Thing *wallbox, const ThingId &carId);
-    double carCapacity(Thing *car);
-    double calculateChargedPercentage(Thing *car, double chargedWattHours);
-
+    QString generateRandomMacAddress() const;
+    Thing *findFreeHlcVehicle() const;
+    Thing *findFreeDcVehicle() const;
+    Thing *findFreeAcCharger() const;
+    ThingDescriptor createHlcVehicleDescriptor() const;
+    Thing *resolveConnectedVehicle(Thing *charger) const;
+    Thing *resolveConnectedCharger(Thing *vehicle) const;
+    void attachVehicleToCharger(Thing *charger, Thing *vehicle);
+    void detachVehicleFromCharger(Thing *charger);
+    double updateEvBatteryStateFromElapsedEnergy(Thing *vehicle, double requestedPower, double hours);
+    void syncVehicleCapacityState(Thing *vehicle);
+    void syncVehicleBatteryState(Thing *vehicle);
+    QStringList phasesForConnection(const QString &phase) const;
+    void addPowerToPhaseTotals(QHash<QString, double> &phaseTotals, const QString &phase, double power) const;
     QPair<QDateTime, QDateTime> calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime);
 
 private:
     PluginTimer *m_timer = nullptr;
     PluginTimer *m_totalsTimer = nullptr;
+
 };
 
 #endif // INTEGRATIONPLUGINENERGYSIMULATION_H

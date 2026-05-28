@@ -24,20 +24,181 @@
 
 #include "integrationpluginenergysimulation.h"
 
-#include "plugininfo.h"
 #include "plugintimer.h"
+#include "plugininfo.h"
 
 #include <QtMath>
+#include <QRandomGenerator>
 
 #define CIVIL_ZENITH  90.83333
 
-IntegrationPluginEnergySimulation::IntegrationPluginEnergySimulation(QObject *parent)
-    : IntegrationPlugin(parent)
-{}
+namespace {
+
+static const char *connectedVehiclePropertyName = "connectedVehicleThingId";
+static const char *legacyConnectedCarPropertyName = "connectedCarThingId";
+static const char *storedEnergyPropertyName = "storedEnergyKWh";
+static const char *lastEnergyUpdatePropertyName = "lastEnergyUpdateTime";
+static const char *pendingHlcVehiclePropertyName = "pendingHlcVehicleConnection";
+static const char *pendingHlcVehicleMacAddressPropertyName = "pendingHlcVehicleMacAddress";
+
+bool isElectricVehicleThing(Thing *thing)
+{
+    if (!thing) {
+        return false;
+    }
+
+    const QStringList interfaces = thing->thingClass().interfaces();
+    return interfaces.contains("electricvehicle")
+            || interfaces.contains("electricvehiclehlc");
+}
+
+void setVehicleChargingState(Thing *vehicle, const QString &chargingState)
+{
+    if (!vehicle || !vehicle->hasState("chargingState")) {
+        return;
+    }
+
+    vehicle->setStateValue("chargingState", chargingState);
+}
+
+bool supportsChargingInterface(Thing *vehicle, const QString &chargingInterface)
+{
+    if (!isElectricVehicleThing(vehicle) || !vehicle->hasState("chargingInterfaces")) {
+        return false;
+    }
+
+    const QString interfaces = vehicle->stateValue("chargingInterfaces").toString();
+    return interfaces == chargingInterface || interfaces == "acdc";
+}
+
+bool isDcChargeableVehicleThing(Thing *thing)
+{
+    return supportsChargingInterface(thing, "dc");
+}
+
+bool isAcChargerThing(Thing *charger)
+{
+    return charger && (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId);
+}
+
+bool isVehicleAvailable(Thing *vehicle)
+{
+    if (!isElectricVehicleThing(vehicle)) {
+        return false;
+    }
+
+    if (vehicle->hasState("pluggedIn") && vehicle->stateValue("pluggedIn").toBool()) {
+        return false;
+    }
+
+    if (vehicle->hasState("connectedChargerThingId") && !vehicle->stateValue("connectedChargerThingId").toString().isEmpty()) {
+        return false;
+    }
+
+    if (vehicle->hasState("hlcSessionActive") && vehicle->stateValue("hlcSessionActive").toBool()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool isHlcChargerThing(Thing *charger)
+{
+    return charger && charger->thingClassId() == hlcDcChargerThingClassId;
+}
+
+bool isDcChargerThing(Thing *charger)
+{
+    return charger && (charger->thingClassId() == dcChargerThingClassId || charger->thingClassId() == hlcDcChargerThingClassId);
+}
+
+double intervalEnergy(double power)
+{
+    return (power / 1000.0) / 60.0 / 60.0 * 5.0;
+}
+
+void resetVehicleChargingSession(Thing *vehicle, const QDateTime &timestamp = QDateTime::currentDateTime())
+{
+    if (!vehicle) {
+        return;
+    }
+
+    setVehicleChargingState(vehicle, "idle");
+    vehicle->setProperty(lastEnergyUpdatePropertyName, timestamp);
+}
+
+double limitVehicleDcChargingPower(Thing *vehicle, double requestedPower)
+{
+    if (!vehicle || requestedPower <= 0 || !vehicle->hasState("dcMaxChargingPower")) {
+        return requestedPower;
+    }
+
+    const double maxChargingPower = vehicle->stateValue("dcMaxChargingPower").toDouble();
+    if (maxChargingPower <= 0) {
+        return requestedPower;
+    }
+
+    return qMin(requestedPower, maxChargingPower);
+}
+
+double normalizeChargingPowerSetpoint(Thing *charger, double requestedPower)
+{
+    if (!charger) {
+        return 0;
+    }
+
+    if (charger->thingClassId() == dcChargerThingClassId) {
+        requestedPower = qMax(0.0, requestedPower);
+        const double maxChargingPower = charger->stateValue(dcChargerMaxChargingPowerStateTypeId).toDouble();
+        const double minChargingPower = charger->stateValue(dcChargerMinChargingPowerStateTypeId).toDouble();
+        if (maxChargingPower > 0) {
+            requestedPower = qMin(requestedPower, maxChargingPower);
+        }
+        if (requestedPower > 0 && minChargingPower > 0 && requestedPower < minChargingPower) {
+            requestedPower = minChargingPower;
+        }
+        return requestedPower;
+    }
+
+    if (charger->thingClassId() == hlcDcChargerThingClassId) {
+        if (requestedPower > 0) {
+            const double maxChargingPower = charger->stateValue(hlcDcChargerMaxChargingPowerStateTypeId).toDouble();
+            const double minChargingPower = charger->stateValue(hlcDcChargerMinChargingPowerStateTypeId).toDouble();
+            if (maxChargingPower > 0) {
+                requestedPower = qMin(requestedPower, maxChargingPower);
+            }
+            if (requestedPower > 0 && minChargingPower > 0 && requestedPower < minChargingPower) {
+                requestedPower = minChargingPower;
+            }
+            return requestedPower;
+        }
+
+        if (requestedPower < 0) {
+            const double maxDischargingPower = charger->stateValue(hlcDcChargerMaxDischargingPowerStateTypeId).toDouble();
+            const double minDischargingPower = charger->stateValue(hlcDcChargerMinDischargingPowerStateTypeId).toDouble();
+            if (maxDischargingPower > 0) {
+                requestedPower = qMax(requestedPower, -maxDischargingPower);
+            }
+            if (minDischargingPower > 0 && qAbs(requestedPower) < minDischargingPower) {
+                requestedPower = -minDischargingPower;
+            }
+        }
+    }
+
+    return requestedPower;
+}
+
+}
+
+
+IntegrationPluginEnergySimulation::IntegrationPluginEnergySimulation(QObject *parent): IntegrationPlugin (parent)
+{
+
+}
 
 void IntegrationPluginEnergySimulation::discoverThings(ThingDiscoveryInfo *info)
 {
-    QTimer::singleShot(1000, info, [=] {
+    QTimer::singleShot(1000, info, [=]{
         ThingClass thingClass = IntegrationPlugin::thingClass(info->thingClassId());
         for (uint i = 0; i < configValue(energySimulationPluginDiscoveryResultCountParamTypeId).toUInt(); i++) {
             ThingDescriptor descriptor(info->thingClassId(), thingClass.displayName());
@@ -58,13 +219,13 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == wallboxThingClassId) {
-        connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value) {
+        connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
             }
             if (settingTypeId == wallboxSettingsPhaseParamTypeId) {
                 if (value.toString() == "All") {
-                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1, 3});
+                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1,3});
                 } else {
                     thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1});
                 }
@@ -89,6 +250,11 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         });
     }
 
+    if (isDcChargerThing(thing)) {
+        thing->setStateValue("chargingCapabilities", isHlcChargerThing(thing) ? "bidirectional" : "charging");
+        thing->setProperty(pendingHlcVehiclePropertyName, false);
+        thing->setProperty(pendingHlcVehicleMacAddressPropertyName, QString());
+    }
 
     if (thing->thingClassId() == stoveThingClassId) {
         // Init property for simulation
@@ -98,38 +264,53 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         thing->setProperty("simulationCycle", std::rand() % 360);
     }
 
-    if (thing->thingClassId() == genericCarThingClassId) {
-        thing->setStateValue(genericCarPhaseCountStateTypeId, thing->setting(genericCarSettingsPhaseCountParamTypeId));
-        thing->setStateValue(genericCarCapacityStateTypeId, thing->setting(genericCarSettingsCapacityParamTypeId));
+    if (isElectricVehicleThing(thing)) {
+        syncVehicleBatteryState(thing);
 
-        connect(info->thing(), &Thing::settingChanged, this, [thing](const ParamTypeId &settingTypeId, const QVariant &value) {
-            if (settingTypeId == genericCarSettingsPhaseCountParamTypeId) {
-                thing->setStateValue(genericCarPhaseCountStateTypeId, value);
-            } else if (settingTypeId == genericCarSettingsCapacityParamTypeId) {
-                thing->setStateValue(genericCarCapacityStateTypeId, value);
+        if (thing->thingClassId() == genericCarThingClassId || thing->thingClassId() == dcVehicleThingClassId) {
+            connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
+                Q_UNUSED(value)
+                if (settingTypeId == genericCarSettingsPhaseCountParamTypeId
+                        || settingTypeId == genericCarSettingsCapacityParamTypeId
+                        || settingTypeId == dcVehicleSettingsCapacityParamTypeId) {
+                    syncVehicleBatteryState(thing);
+                }
+            });
+        }
+
+        if (thing->thingClassId() == hlcVehicleThingClassId) {
+            const QString vehicleMacAddress = thing->paramValue(hlcVehicleThingMacAddressParamTypeId).toString();
+            qCDebug(dcEnergySimulation()) << "HLC vehicle configured:"
+                                          << thing->name()
+                                          << "thingId:" << thing->id()
+                                          << "macAddress:" << vehicleMacAddress;
+            foreach (Thing *charger, myThings().filterByThingClassId(hlcDcChargerThingClassId)) {
+                if (charger->property(pendingHlcVehiclePropertyName).toBool()
+                        && charger->property(pendingHlcVehicleMacAddressPropertyName).toString() == vehicleMacAddress
+                        && !resolveConnectedVehicle(charger)) {
+                    qCDebug(dcEnergySimulation()) << "Attaching freshly created HLC vehicle to pending charger:"
+                                                  << "vehicleThingId:" << thing->id()
+                                                  << "chargerThingId:" << charger->id();
+                    attachVehicleToCharger(charger, thing);
+                    break;
+                }
             }
-        });
+        }
     }
 }
 
+
 void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 {
-    if (thing->thingClassId() == apiCarThingClassId || thing->thingClassId() == genericCarThingClassId) {
-        foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
-            unplugCarFromWallbox(wallbox, thing->id());
-        }
-        foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-            unplugCarFromWallbox(wallbox, thing->id());
+    if (isElectricVehicleThing(thing)) {
+        if (Thing *charger = resolveConnectedCharger(thing)) {
+            detachVehicleFromCharger(charger);
         }
         return;
     }
 
-    if (thing->thingClassId() == wallboxThingClassId || thing->thingClassId() == wallboxNoMeterThingClassId) {
-        Thing *car = myThings().findById(thing->property("connectedCarThingId").toUuid());
-        if (car) {
-            car->setStateValue("pluggedIn", false);
-            car->setProperty("lastChargeUpdateTime", QDateTime());
-        }
+    if (isAcChargerThing(thing) || isDcChargerThing(thing)) {
+        detachVehicleFromCharger(thing);
     }
 }
 
@@ -174,7 +355,6 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         if (info->action().actionTypeId() == wallboxNoMeterDisconnectActionTypeId) {
             info->thing()->setStateValue(wallboxNoMeterConnectedStateTypeId, false);
         }
-
         if (info->action().actionTypeId() == wallboxNoMeterDesiredPhaseCountActionTypeId) {
             uint desiredPhaseCount = info->action().paramValue(wallboxNoMeterDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt();
             qCDebug(dcEnergySimulation()) << "Setting desired phase count to" << desiredPhaseCount;
@@ -182,65 +362,145 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         }
     }
 
+    if (info->thing()->thingClassId() == dcChargerThingClassId) {
+        if (info->action().actionTypeId() == dcChargerConnectActionTypeId) {
+            info->thing()->setStateValue("connected", true);
+        } else if (info->action().actionTypeId() == dcChargerDisconnectActionTypeId) {
+            info->thing()->setStateValue("connected", false);
+            info->thing()->setStateValue("currentPower", 0);
+            resetVehicleChargingSession(resolveConnectedVehicle(info->thing()));
+        } else if (info->action().actionTypeId() == dcChargerPowerActionTypeId) {
+            bool powerEnabled = info->action().paramValue(dcChargerPowerActionPowerParamTypeId).toBool();
+            info->thing()->setStateValue("power", powerEnabled);
+            if (!powerEnabled) {
+                info->thing()->setStateValue("currentPower", 0);
+                resetVehicleChargingSession(resolveConnectedVehicle(info->thing()));
+            }
+        } else if (info->action().actionTypeId() == dcChargerChargingPowerActionTypeId) {
+            double chargingPower = normalizeChargingPowerSetpoint(info->thing(), info->action().paramValue(dcChargerChargingPowerActionChargingPowerParamTypeId).toDouble());
+            info->thing()->setStateValue("chargingPower", chargingPower);
+        } else if (info->action().actionTypeId() == dcChargerConnectVehicleActionTypeId) {
+            if (resolveConnectedVehicle(info->thing())) {
+                info->finish(Thing::ThingErrorThingInUse, "DC charger already has a connected vehicle.");
+                return;
+            }
+
+            const QString vehicleThingIdValue = info->action().paramValue(dcChargerConnectVehicleActionThingIdParamTypeId).toString().trimmed();
+            Thing *vehicle = nullptr;
+            if (vehicleThingIdValue.isEmpty()) {
+                vehicle = findFreeDcVehicle();
+                if (!vehicle) {
+                    info->finish(Thing::ThingErrorHardwareNotAvailable, "No free DC-capable vehicle found.");
+                    return;
+                }
+            } else {
+                ThingId vehicleThingId(vehicleThingIdValue);
+                vehicle = myThings().findById(vehicleThingId);
+                if (!isDcChargeableVehicleThing(vehicle)) {
+                    info->finish(Thing::ThingErrorThingNotFound, "Vehicle thing not found.");
+                    return;
+                }
+
+                if (!isVehicleAvailable(vehicle)) {
+                    info->finish(Thing::ThingErrorThingInUse, "Vehicle is already connected to another charger.");
+                    return;
+                }
+            }
+
+            attachVehicleToCharger(info->thing(), vehicle);
+        } else if (info->action().actionTypeId() == dcChargerDisconnectVehicleActionTypeId) {
+            detachVehicleFromCharger(info->thing());
+        }
+    }
+
+    if (info->thing()->thingClassId() == hlcDcChargerThingClassId) {
+        if (info->action().actionTypeId() == hlcDcChargerConnectActionTypeId) {
+            info->thing()->setStateValue("connected", true);
+        } else if (info->action().actionTypeId() == hlcDcChargerDisconnectActionTypeId) {
+            info->thing()->setStateValue("connected", false);
+            info->thing()->setStateValue("currentPower", 0);
+            resetVehicleChargingSession(resolveConnectedVehicle(info->thing()));
+        } else if (info->action().actionTypeId() == hlcDcChargerPowerActionTypeId) {
+            bool powerEnabled = info->action().paramValue(hlcDcChargerPowerActionPowerParamTypeId).toBool();
+            info->thing()->setStateValue("power", powerEnabled);
+            if (!powerEnabled) {
+                info->thing()->setStateValue("currentPower", 0);
+                resetVehicleChargingSession(resolveConnectedVehicle(info->thing()));
+            }
+        } else if (info->action().actionTypeId() == hlcDcChargerChargingPowerActionTypeId) {
+            double chargingPower = normalizeChargingPowerSetpoint(info->thing(), info->action().paramValue(hlcDcChargerChargingPowerActionChargingPowerParamTypeId).toDouble());
+            info->thing()->setStateValue("chargingPower", chargingPower);
+        } else if (info->action().actionTypeId() == hlcDcChargerConnectRandomHlcVehicleActionTypeId) {
+            if (resolveConnectedVehicle(info->thing())) {
+                info->finish(Thing::ThingErrorThingInUse, "HLC charger already has a connected vehicle.");
+                return;
+            }
+
+            Thing *vehicle = findFreeHlcVehicle();
+            if (vehicle) {
+                qCDebug(dcEnergySimulation()) << "Reusing free HLC vehicle for charger connection:"
+                                              << "vehicleThingId:" << vehicle->id()
+                                              << "chargerThingId:" << info->thing()->id();
+                attachVehicleToCharger(info->thing(), vehicle);
+                info->finish(Thing::ThingErrorNoError);
+                return;
+            }
+
+            ThingDescriptor descriptor = createHlcVehicleDescriptor();
+            const QString macAddress = descriptor.params().paramValue(hlcVehicleThingMacAddressParamTypeId).toString();
+            qCDebug(dcEnergySimulation()) << "No reusable HLC vehicle available. Emitting auto thing descriptor:"
+                                          << descriptor.title()
+                                          << "chargerThingId:" << info->thing()->id()
+                                          << "macAddress:" << macAddress
+                                          << "Configure the created vehicle using its thingId once setup completes.";
+            info->thing()->setProperty(pendingHlcVehiclePropertyName, true);
+            info->thing()->setProperty(pendingHlcVehicleMacAddressPropertyName, macAddress);
+            emit autoThingsAppeared({descriptor});
+            info->finish(Thing::ThingErrorNoError);
+            return;
+        } else if (info->action().actionTypeId() == hlcDcChargerDisconnectVehicleActionTypeId) {
+            detachVehicleFromCharger(info->thing());
+        }
+    }
+
     if (info->thing()->thingClassId() == apiCarThingClassId || info->thing()->thingClassId() == genericCarThingClassId) {
         if (info->action().actionTypeId() == apiCarPluggedInActionTypeId || info->action().actionTypeId() == genericCarPluggedInActionTypeId) {
             ParamTypeId pluggedInParamTypeId = info->thing()->thingClass().actionTypes().findByName("pluggedIn").paramTypes().findByName("pluggedIn").id();
             if (info->action().paramValue(pluggedInParamTypeId).toBool()) {
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
-                    if (wallbox->property("connectedCarThingId").toUuid() == info->thing()->id()) {
-                        info->thing()->setStateValue("pluggedIn", true);
-                        info->finish(Thing::ThingErrorNoError);
-                        return;
-                    }
+                if (!isVehicleAvailable(info->thing())) {
+                    info->finish(Thing::ThingErrorThingInUse, "Vehicle is already connected to another charger.");
+                    return;
                 }
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-                    if (wallbox->property("connectedCarThingId").toUuid() == info->thing()->id()) {
-                        info->thing()->setStateValue("pluggedIn", true);
-                        info->finish(Thing::ThingErrorNoError);
-                        return;
-                    }
+                if (Thing *charger = findFreeAcCharger()) {
+                    attachVehicleToCharger(charger, info->thing());
+                    info->finish(Thing::ThingErrorNoError);
+                    return;
                 }
 
-                // Try to plug the car to the first free wallbox
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
-                    if (plugCarIntoWallbox(wallbox, info->thing())) {
-                        info->thing()->setStateValue("pluggedIn", true);
-                        info->finish(Thing::ThingErrorNoError);
-                        return;
-                    }
-                }
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-                    if (plugCarIntoWallbox(wallbox, info->thing())) {
-                        info->thing()->setStateValue("pluggedIn", true);
-                        info->finish(Thing::ThingErrorNoError);
-                        return;
-                    }
-                }
-                // No wallbox found where we could plug into... Failing action
                 info->finish(Thing::ThingErrorHardwareNotAvailable, "No free wallbox found");
                 return;
             } else {
+                if (Thing *charger = resolveConnectedCharger(info->thing())) {
+                    detachVehicleFromCharger(charger);
+                }
                 info->thing()->setStateValue("pluggedIn", false);
-                // Unplug from wallbox
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxThingClassId)) {
-                    if (unplugCarFromWallbox(wallbox, info->thing()->id())) {
-                        break;
-                    }
-                }
-                foreach (Thing *wallbox, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-                    if (unplugCarFromWallbox(wallbox, info->thing()->id())) {
-                        break;
-                    }
-                }
-                info->thing()->setProperty("lastChargeUpdateTime", QDateTime());
+                resetVehicleChargingSession(info->thing());
                 info->finish(Thing::ThingErrorNoError);
                 return;
             }
-        } else if (info->action().actionTypeId() == apiCarMinChargingCurrentActionTypeId || info->action().actionTypeId() == genericCarMinChargingCurrentActionTypeId) {
-            ParamTypeId minChargingCurrentParamTypeId = info->thing()->thingClass().actionTypes().findByName("minChargingCurrent").paramTypes().findByName("minChargingCurrent").id();
-            info->thing()->setStateValue("minChargingCurrent", info->action().paramValue(minChargingCurrentParamTypeId));
+        } else if (info->action().actionTypeId() == info->thing()->thingClass().actionTypes().findByName("acMinChargingCurrent").id()) {
+            ParamTypeId minChargingCurrentParamTypeId = info->thing()->thingClass().actionTypes().findByName("acMinChargingCurrent").paramTypes().findByName("acMinChargingCurrent").id();
+            info->thing()->setStateValue("acMinChargingCurrent", info->action().paramValue(minChargingCurrentParamTypeId));
         } else if (info->action().actionTypeId() == genericCarBatteryLevelActionTypeId) {
             info->thing()->setStateValue(genericCarBatteryLevelStateTypeId, info->action().paramValue(genericCarBatteryLevelActionBatteryLevelParamTypeId).toInt());
+            syncVehicleBatteryState(info->thing());
+        }
+    }
+
+    if (info->thing()->thingClassId() == dcVehicleThingClassId) {
+        if (info->action().actionTypeId() == dcVehicleBatteryLevelActionTypeId) {
+            info->thing()->setStateValue(dcVehicleBatteryLevelStateTypeId, info->action().paramValue(dcVehicleBatteryLevelActionBatteryLevelParamTypeId).toInt());
+            syncVehicleBatteryState(info->thing());
         }
     }
     if (info->thing()->thingClassId() == sgReadyHeatPumpThingClassId) {
@@ -266,7 +526,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     qCDebug(dcEnergySimulation()) << "******************* Adjusting simulation" << QDateTime::currentDateTime().toString();
 
     // Update solar inverters
-    foreach (Thing *inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
+    foreach (Thing* inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
         QDateTime now = QDateTime::currentDateTime();
         int hoursOffset = inverter->setting(solarInverterSettingsHoursOffsetParamTypeId).toInt();
         now = now.addSecs(hoursOffset * 60 * 60);
@@ -293,133 +553,154 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
     }
 
-    // Update evchargers
+    QDateTime now = QDateTime::currentDateTime();
+
+    // Update AC wallboxes
     foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxThingClassId)) {
-        if (evCharger->stateValue(wallboxPluggedInStateTypeId).toBool() && evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
-            ThingId connectedCarThingId = evCharger->property("connectedCarThingId").toUuid();
-            Thing *car = myThings().findById(connectedCarThingId);
-            qCDebug(dcEnergySimulation()) << "* Evaluating wallbox:" << evCharger->name() << "Connected car:" << (car ? car->name() : "none");
-            if (car && car->stateValue("batteryLevel").toInt() < 100) {
-                evCharger->setStateValue(wallboxChargingStateTypeId, true);
-                QDateTime lastChargeUpdateTime = car->property("lastChargeUpdateTime").toDateTime();
-                if (lastChargeUpdateTime.isNull()) {
-                    car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
-                    break;
-                }
+        Thing *car = resolveConnectedVehicle(evCharger);
+        double effectivePower = 0;
+        if (car && evCharger->stateValue(wallboxConnectedStateTypeId).toBool() && evCharger->stateValue(wallboxPowerStateTypeId).toBool()) {
+            QDateTime lastEnergyUpdateTime = car->property(lastEnergyUpdatePropertyName).toDateTime();
+            if (!lastEnergyUpdateTime.isValid()) {
+                car->setProperty(lastEnergyUpdatePropertyName, now);
+            } else {
                 double maxChargingCurrent = evCharger->stateValue(wallboxMaxChargingCurrentStateTypeId).toDouble();
                 uint connectedPhaseCount = evCharger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
                 uint desiredPhaseCount = evCharger->stateValue(wallboxDesiredPhaseCountStateTypeId).toUInt();
-                uint carPhaseCount = car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1;
-                qCDebug(dcEnergySimulation()) << "Connected phases:" << connectedPhaseCount << "desired phases:" << desiredPhaseCount << "Car phases:" << carPhaseCount;
+                uint carPhaseCount = car->hasState("acPhaseCount") ? car->stateValue("acPhaseCount").toUInt() : 1;
                 uint phaseCount = qMin(desiredPhaseCount, qMin(connectedPhaseCount, carPhaseCount));
+                double requestedPower = 230.0 * maxChargingCurrent * phaseCount;
+                double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+
                 evCharger->setStateValue(wallboxPhaseCountStateTypeId, phaseCount);
-                double chargingPower = 230 * maxChargingCurrent * phaseCount;
-                double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
-                double chargedWattHours = chargingPower * chargingTimeHours;
-                // cWH : cap = x : 100
-                double chargedPercentage = calculateChargedPercentage(car, chargedWattHours);
-                qCDebug(dcEnergySimulation()) << "* #### Car charging info:";
-                qCDebug(dcEnergySimulation()) << "* # max charging current:" << maxChargingCurrent << "A on" << phaseCount << "phases";
-                qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
-                qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
-
-                evCharger->setStateValue(wallboxCurrentPowerStateTypeId, chargingPower);
-                double totalEnergyConsumed = evCharger->stateValue(wallboxTotalEnergyConsumedStateTypeId).toDouble();
-                double chargedEnergy = (chargingPower / 1000) / 60 / 60 * 5;
-                totalEnergyConsumed += chargedEnergy;
-                double sessionEnergy = evCharger->stateValue(wallboxSessionEnergyStateTypeId).toDouble();
-                sessionEnergy += chargedEnergy;
-
-                qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyConsumed << "kWh";
-                qCDebug(dcEnergySimulation()) << "* # session:" << sessionEnergy << "kWh";
-                evCharger->setStateValue(wallboxTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
-                evCharger->setStateValue(wallboxSessionEnergyStateTypeId, sessionEnergy);
-
-                if (car->thingClassId() == apiCarThingClassId) {
-                    if (chargedPercentage >= 1) {
-                        car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
-
-                        car->setStateValue("batteryLevel", car->stateValue("batteryLevel").toInt() + chargedPercentage);
-                        car->setStateValue("batteryCritical", car->stateValue("batteryLevel").toInt() < 10);
-                    }
-                }
-            } else {
-                qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car already full)";
-                evCharger->setStateValue(wallboxChargingStateTypeId, false);
-                evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
+                effectivePower = updateEvBatteryStateFromElapsedEnergy(car, requestedPower, hours);
+                car->setProperty(lastEnergyUpdatePropertyName, now);
             }
-        } else {
-            qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car not plugged in or charging disabled)";
-            evCharger->setStateValue(wallboxChargingStateTypeId, false);
-            evCharger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
+        } else if (car) {
+            resetVehicleChargingSession(car, now);
+        }
+
+        evCharger->setStateValue(wallboxChargingStateTypeId, effectivePower > 0);
+        evCharger->setStateValue(wallboxCurrentPowerStateTypeId, effectivePower);
+        if (effectivePower > 0) {
+            double chargedEnergy = intervalEnergy(effectivePower);
+            evCharger->setStateValue(wallboxTotalEnergyConsumedStateTypeId, evCharger->stateValue(wallboxTotalEnergyConsumedStateTypeId).toDouble() + chargedEnergy);
+            evCharger->setStateValue(wallboxSessionEnergyStateTypeId, evCharger->stateValue(wallboxSessionEnergyStateTypeId).toDouble() + chargedEnergy);
         }
     }
 
     foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-        if (evCharger->stateValue(wallboxNoMeterPluggedInStateTypeId).toBool() && evCharger->stateValue(wallboxNoMeterPowerStateTypeId).toBool()) {
-            ThingId connectedCarThingId = evCharger->property("connectedCarThingId").toUuid();
-            Thing *car = myThings().findById(connectedCarThingId);
-            qCDebug(dcEnergySimulation()) << "* Evaluating wallbox (no meter):" << evCharger->name() << "Connected car:" << (car ? car->name() : "none");
-            if (car && car->stateValue("batteryLevel").toInt() < 100) {
-                evCharger->setStateValue(wallboxNoMeterChargingStateTypeId, true);
-                QDateTime lastChargeUpdateTime = car->property("lastChargeUpdateTime").toDateTime();
-                if (lastChargeUpdateTime.isNull()) {
-                    car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
-                    break;
-                }
+        Thing *car = resolveConnectedVehicle(evCharger);
+        double effectivePower = 0;
+        if (car && evCharger->stateValue(wallboxNoMeterConnectedStateTypeId).toBool() && evCharger->stateValue(wallboxNoMeterPowerStateTypeId).toBool()) {
+            QDateTime lastEnergyUpdateTime = car->property(lastEnergyUpdatePropertyName).toDateTime();
+            if (!lastEnergyUpdateTime.isValid()) {
+                car->setProperty(lastEnergyUpdatePropertyName, now);
+            } else {
                 double maxChargingCurrent = evCharger->stateValue(wallboxNoMeterMaxChargingCurrentStateTypeId).toDouble();
                 uint connectedPhaseCount = evCharger->setting(wallboxNoMeterSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
                 uint desiredPhaseCount = evCharger->stateValue(wallboxNoMeterDesiredPhaseCountStateTypeId).toUInt();
-                uint carPhaseCount = car->hasState("phaseCount") ? car->stateValue("phaseCount").toUInt() : 1;
-                qCDebug(dcEnergySimulation()) << "Connected phases:" << connectedPhaseCount << "desired phases:" << desiredPhaseCount << "Car phases:" << carPhaseCount;
+                uint carPhaseCount = car->hasState("acPhaseCount") ? car->stateValue("acPhaseCount").toUInt() : 1;
                 uint phaseCount = qMin(desiredPhaseCount, qMin(connectedPhaseCount, carPhaseCount));
+                double requestedPower = 230.0 * maxChargingCurrent * phaseCount;
+                double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+
                 evCharger->setStateValue(wallboxNoMeterPhaseCountStateTypeId, phaseCount);
-
-                double chargingPower = 230 * maxChargingCurrent * phaseCount;
-                double chargingTimeHours = 1.0 * lastChargeUpdateTime.msecsTo(QDateTime::currentDateTime()) / 1000 / 60 / 60;
-                double chargedWattHours = chargingPower * chargingTimeHours;
-                // cWH : cap = x : 100
-                double chargedPercentage = calculateChargedPercentage(car, chargedWattHours);
-                qCDebug(dcEnergySimulation()) << "* #### Car charging info:";
-                qCDebug(dcEnergySimulation()) << "* # max charging current:" << maxChargingCurrent << "A on" << phaseCount << "phases";
-                qCDebug(dcEnergySimulation()) << "* # time passed since last update:" << chargingTimeHours;
-                qCDebug(dcEnergySimulation()) << "* # charged" << chargedWattHours << "Wh," << chargedPercentage << "%";
-
-                //evCharger->setStateValue(wallboxCurrentPowerStateTypeId, chargingPower);
-                evCharger->setProperty("currentPower", chargingPower);
-                double totalEnergyConsumed = evCharger->property("totalEnergyConsumed").toDouble();
-                double chargedEnergy = (chargingPower / 1000) / 60 / 60 * 5;
-                totalEnergyConsumed += chargedEnergy;
-
-                qCDebug(dcEnergySimulation()) << "* # total:" << totalEnergyConsumed << "kWh";
-                evCharger->setProperty("totalEnergyConsumed", totalEnergyConsumed);
-
-                if (car->thingClassId() == apiCarThingClassId) {
-                    if (chargedPercentage >= 1) {
-                        car->setProperty("lastChargeUpdateTime", QDateTime::currentDateTime());
-
-                        car->setStateValue("batteryLevel", car->stateValue("batteryLevel").toInt() + chargedPercentage);
-                        car->setStateValue("batteryCritical", car->stateValue("batteryLevel").toInt() < 10);
-                    }
-                }
-            } else {
-                qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car already full)";
-                evCharger->setStateValue(wallboxNoMeterChargingStateTypeId, false);
-                evCharger->setProperty("currentPower", 0);
+                effectivePower = updateEvBatteryStateFromElapsedEnergy(car, requestedPower, hours);
+                car->setProperty(lastEnergyUpdatePropertyName, now);
             }
-        } else {
-            qCDebug(dcEnergySimulation()) << "* Ev charger using 0 (Car not plugged in or charging disabled)";
-            evCharger->setStateValue(wallboxNoMeterChargingStateTypeId, false);
-            evCharger->setProperty("currentPower", 0);
+        } else if (car) {
+            resetVehicleChargingSession(car, now);
+        }
+
+        evCharger->setStateValue(wallboxNoMeterChargingStateTypeId, effectivePower > 0);
+        evCharger->setProperty("currentPower", effectivePower);
+        if (effectivePower > 0) {
+            evCharger->setProperty("totalEnergyConsumed", evCharger->property("totalEnergyConsumed").toDouble() + intervalEnergy(effectivePower));
         }
     }
 
-    // Reduce battery level on all unplugged cars
-    foreach (Thing *car, myThings().filterByInterface("electricvehicle")) {
-        if (!car->stateValue("pluggedIn").toBool() && car->stateValue("batteryLevel").toInt() > 0) {
-            car->setStateValue("batteryLevel", car->stateValue("batteryLevel").toInt() - 1);
-            car->setStateValue("batteryCritical", car->stateValue("batteryLevel").toInt() < 10);
+    // Update DC chargers
+    foreach (Thing *dcCharger, myThings().filterByThingClassId(dcChargerThingClassId)) {
+        Thing *vehicle = resolveConnectedVehicle(dcCharger);
+        double effectivePower = 0;
+        if (vehicle && dcCharger->stateValue("connected").toBool() && dcCharger->stateValue("power").toBool()) {
+            QDateTime lastEnergyUpdateTime = vehicle->property(lastEnergyUpdatePropertyName).toDateTime();
+            if (!lastEnergyUpdateTime.isValid()) {
+                vehicle->setProperty(lastEnergyUpdatePropertyName, now);
+            } else {
+                double requestedPower = normalizeChargingPowerSetpoint(dcCharger, dcCharger->stateValue("chargingPower").toDouble());
+                requestedPower = limitVehicleDcChargingPower(vehicle, requestedPower);
+                double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+                effectivePower = updateEvBatteryStateFromElapsedEnergy(vehicle, requestedPower, hours);
+                vehicle->setProperty(lastEnergyUpdatePropertyName, now);
+            }
+        } else if (vehicle) {
+            resetVehicleChargingSession(vehicle, now);
         }
+
+        dcCharger->setStateValue("currentPower", effectivePower);
+        if (effectivePower > 0) {
+            dcCharger->setStateValue("totalEnergyConsumed", dcCharger->stateValue("totalEnergyConsumed").toDouble() + intervalEnergy(effectivePower));
+        }
+    }
+
+    // Update bidirectional HLC DC chargers
+    foreach (Thing *hlcCharger, myThings().filterByThingClassId(hlcDcChargerThingClassId)) {
+        Thing *vehicle = resolveConnectedVehicle(hlcCharger);
+        double effectivePower = 0;
+        bool sessionActive = vehicle
+                && hlcCharger->stateValue("connected").toBool()
+                && hlcCharger->stateValue("power").toBool()
+                && hlcCharger->stateValue("vehicleIdentified").toBool()
+                && hlcCharger->stateValue("hlcSessionActive").toBool();
+
+        if (sessionActive) {
+            QDateTime lastEnergyUpdateTime = vehicle->property(lastEnergyUpdatePropertyName).toDateTime();
+            if (!lastEnergyUpdateTime.isValid()) {
+                vehicle->setProperty(lastEnergyUpdatePropertyName, now);
+            } else {
+                double requestedPower = normalizeChargingPowerSetpoint(hlcCharger, hlcCharger->stateValue("chargingPower").toDouble());
+                requestedPower = limitVehicleDcChargingPower(vehicle, requestedPower);
+                double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+                effectivePower = updateEvBatteryStateFromElapsedEnergy(vehicle, requestedPower, hours);
+                vehicle->setProperty(lastEnergyUpdatePropertyName, now);
+            }
+        } else if (vehicle) {
+            resetVehicleChargingSession(vehicle, now);
+        }
+
+        hlcCharger->setStateValue("currentPower", effectivePower);
+        if (effectivePower > 0) {
+            hlcCharger->setStateValue("totalEnergyConsumed", hlcCharger->stateValue("totalEnergyConsumed").toDouble() + intervalEnergy(effectivePower));
+        } else if (effectivePower < 0) {
+            hlcCharger->setStateValue("totalEnergyProduced", hlcCharger->stateValue("totalEnergyProduced").toDouble() - intervalEnergy(effectivePower));
+        }
+    }
+
+    // Reduce battery level on unplugged cars only.
+    foreach (Thing *car, myThings()) {
+        if (!isElectricVehicleThing(car)) {
+            continue;
+        }
+
+        if (car->stateValue("pluggedIn").toBool()) {
+            continue;
+        }
+
+        if (car->hasState("connectedChargerThingId") && !car->stateValue("connectedChargerThingId").toString().isEmpty()) {
+            continue;
+        }
+
+        QDateTime lastEnergyUpdateTime = car->property(lastEnergyUpdatePropertyName).toDateTime();
+        if (!lastEnergyUpdateTime.isValid()) {
+            car->setProperty(lastEnergyUpdatePropertyName, now);
+            continue;
+        }
+
+        double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+        updateEvBatteryStateFromElapsedEnergy(car, -100.0, hours);
+        resetVehicleChargingSession(car, now);
     }
 
     // Update stove
@@ -496,7 +777,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         uint maxConsumption = heatPump->setting(sgReadyHeatPumpSettingsMaxConsumptionParamTypeId).toUInt();
         double currentPower = 0;
         if (operatingMode == "Off") {
-            currentPower = 10 + (std::rand() % 5); // We need some energy since only the pump is off, not the controller
+            currentPower = 10  + (std::rand() % 5); // We need some energy since only the pump is off, not the controller
         } else if (operatingMode == "Low") {
             currentPower = minConsumption + (std::rand() % 20);
         } else if (operatingMode == "Standard") {
@@ -541,26 +822,29 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         heatPump->setStateValue(simpleHeatPumpTotalEnergyConsumedStateTypeId, totalEnergyConsumed);
     }
 
+
     /////////////////////////////////////////////////////
     /// Energy meter
     ////////////////////////////////////////////////////
 
+
     // Sum up production from inverters
-    QHash<QString, double> totalPhaseProduction = {{"A", 0}, {"B", 0}, {"C", 0}};
+    QHash<QString, double> totalPhaseProduction = {
+        {"A", 0},
+        {"B", 0},
+        {"C", 0}
+    };
     foreach (Thing *inverter, myThings().filterByThingClassId(solarInverterThingClassId)) {
-        QString phase = inverter->setting(solarInverterSettingsPhaseParamTypeId).toString();
-        double production = inverter->stateValue(solarInverterCurrentPowerStateTypeId).toDouble();
-        if (phase == "All") {
-            totalPhaseProduction["A"] += production / 3;
-            totalPhaseProduction["B"] += production / 3;
-            totalPhaseProduction["C"] += production / 3;
-        } else {
-            totalPhaseProduction[phase] += production;
-        }
+        addPowerToPhaseTotals(totalPhaseProduction, inverter->setting(solarInverterSettingsPhaseParamTypeId).toString(), inverter->stateValue(solarInverterCurrentPowerStateTypeId).toDouble());
     }
 
+
     // Sum up consumption of all consumers
-    QHash<QString, double> totalPhasesConsumption = {{"A", 0}, {"B", 0}, {"C", 0}};
+    QHash<QString, double> totalPhasesConsumption = {
+        {"A", 0},
+        {"B", 0},
+        {"C", 0}
+    };
     // Simulate a base consumption of 300W (100 on each phase) + 10W jitter
     totalPhasesConsumption["A"] += 100 + (std::rand() % 10);
     totalPhasesConsumption["B"] += 100 + (std::rand() % 10);
@@ -569,34 +853,12 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
         if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
-            QString phase = consumer->setting("phase").toString();
-            double currentPower = consumer->stateValue("currentPower").toDouble();
-            if (phase == "All" || phase == "ABC") {
-                qCDebug(dcEnergySimulation()) << "Adding" << currentPower / 3 << "per phase for" << consumer->name();
-                totalPhasesConsumption["A"] += currentPower / 3;
-                totalPhasesConsumption["B"] += currentPower / 3;
-                totalPhasesConsumption["C"] += currentPower / 3;
-            } else {
-                qCDebug(dcEnergySimulation()) << "Adding" << currentPower << "to phase" << phase << "for" << consumer->name();
-                totalPhasesConsumption[phase] += currentPower;
-            }
+            addPowerToPhaseTotals(totalPhasesConsumption, consumer->setting("phase").toString(), consumer->stateValue("currentPower").toDouble());
         }
     }
 
-    // Also add the wallbox (no meter) values, they still consume energy even if they cannot show it on their own.
     foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-        double currentPower = evCharger->property("currentPower").toDouble();
-        QString phase = evCharger->setting("phase").toString();
-
-        if (phase == "All" || phase == "ABC") {
-            qCDebug(dcEnergySimulation()) << "Adding" << currentPower / 3 << "per phase for" << evCharger->name();
-            totalPhasesConsumption["A"] += currentPower / 3;
-            totalPhasesConsumption["B"] += currentPower / 3;
-            totalPhasesConsumption["C"] += currentPower / 3;
-        } else {
-            qCDebug(dcEnergySimulation()) << "Adding" << currentPower << "to phase" << phase << "for" << evCharger->name();
-            totalPhasesConsumption[phase] += currentPower;
-        }
+        addPowerToPhaseTotals(totalPhasesConsumption, evCharger->setting("phase").toString(), evCharger->property("currentPower").toDouble());
     }
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
@@ -610,6 +872,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     }
     double grandTotal = totalConsumption + totalProduction; // Note: production is negative
 
+
     // Charge/discharge batteries depending on totals so far
     foreach (Thing *battery, myThings().filterByThingClassId(batteryThingClassId)) {
         int batteryLevel = battery->stateValue(batteryBatteryLevelStateTypeId).toInt();
@@ -618,13 +881,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
         if (grandTotal < 0 && batteryLevel < 100) {
             double chargedWatts = qMin(chargeRate, -grandTotal);
-            if (phase == "All") {
-                totalPhasesConsumption["A"] += chargedWatts / 3;
-                totalPhasesConsumption["B"] += chargedWatts / 3;
-                totalPhasesConsumption["C"] += chargedWatts / 3;
-            } else {
-                totalPhasesConsumption[phase] += chargedWatts;
-            }
+            addPowerToPhaseTotals(totalPhasesConsumption, phase, chargedWatts);
 
             battery->setStateValue(batteryChargingStateStateTypeId, "charging");
             battery->setStateValue(batteryCurrentPowerStateTypeId, chargedWatts);
@@ -645,15 +902,10 @@ void IntegrationPluginEnergySimulation::updateSimulation()
 
         } else if (grandTotal > 0 && batteryLevel > 0) {
             double returnedWatts = qMin(chargeRate, grandTotal);
-            if (phase == "All") {
-                totalPhaseProduction["A"] += -returnedWatts / 3;
-                totalPhaseProduction["B"] += -returnedWatts / 3;
-                totalPhaseProduction["C"] += -returnedWatts / 3;
-            } else {
-                totalPhaseProduction[phase] += -returnedWatts;
-            }
+            addPowerToPhaseTotals(totalPhaseProduction, phase, -returnedWatts);
             battery->setStateValue(batteryChargingStateStateTypeId, "discharging");
             battery->setStateValue(batteryCurrentPowerStateTypeId, -returnedWatts);
+
 
             double pendingDischargedWh = battery->property("pendingDischargedWh").toDouble();
             QDateTime lastUpdate = battery->property("lastUpdate").toDateTime();
@@ -674,6 +926,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             battery->setStateValue(batteryCurrentPowerStateTypeId, 0);
         }
     }
+
 
     // Sum up all phases *again* after the battery has been facored in
     totalProduction = 0;
@@ -720,57 +973,332 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     }
 }
 
-bool IntegrationPluginEnergySimulation::plugCarIntoWallbox(Thing *wallbox, Thing *car)
+QString IntegrationPluginEnergySimulation::generateRandomMacAddress() const
 {
-    if (!wallbox->property("connectedCarThingId").toUuid().isNull()) {
-        return false;
+    QStringList parts;
+    for (int i = 0; i < 6; i++) {
+        int byte = QRandomGenerator::global()->bounded(256);
+        if (i == 0) {
+            byte = (byte | 0x02) & 0xFE;
+        }
+        parts.append(QString("%1").arg(byte, 2, 16, QChar('0')).toUpper());
     }
-
-    wallbox->setProperty("connectedCarThingId", car->id());
-
-    if (wallbox->thingClassId() == wallboxThingClassId) {
-        wallbox->setStateValue(wallboxPluggedInStateTypeId, true);
-        wallbox->setStateValue(wallboxSessionEnergyStateTypeId, 0);
-    } else if (wallbox->thingClassId() == wallboxNoMeterThingClassId) {
-        wallbox->setStateValue(wallboxNoMeterPluggedInStateTypeId, true);
-    }
-
-    return true;
+    return parts.join(":");
 }
 
-bool IntegrationPluginEnergySimulation::unplugCarFromWallbox(Thing *wallbox, const ThingId &carId)
+Thing *IntegrationPluginEnergySimulation::findFreeHlcVehicle() const
 {
-    if (wallbox->property("connectedCarThingId").toUuid() != carId) {
-        return false;
+    foreach (Thing *vehicle, myThings().filterByInterface("electricvehiclehlc")) {
+        if (isVehicleAvailable(vehicle)) {
+            return vehicle;
+        }
     }
 
-    wallbox->setProperty("connectedCarThingId", QUuid());
+    return nullptr;
+}
 
-    if (wallbox->thingClassId() == wallboxThingClassId) {
-        wallbox->setStateValue(wallboxPluggedInStateTypeId, false);
-        wallbox->setStateValue(wallboxSessionEnergyStateTypeId, 0);
-    } else if (wallbox->thingClassId() == wallboxNoMeterThingClassId) {
-        wallbox->setStateValue(wallboxNoMeterPluggedInStateTypeId, false);
+Thing *IntegrationPluginEnergySimulation::findFreeDcVehicle() const
+{
+    foreach (Thing *vehicle, myThings()) {
+        if (isDcChargeableVehicleThing(vehicle) && isVehicleAvailable(vehicle)) {
+            return vehicle;
+        }
     }
 
-    return true;
+    return nullptr;
 }
 
-double IntegrationPluginEnergySimulation::carCapacity(Thing *car)
+Thing *IntegrationPluginEnergySimulation::findFreeAcCharger() const
 {
-    return car->stateValue("capacity").toDouble();
+    foreach (Thing *charger, myThings()) {
+        if (isAcChargerThing(charger) && !resolveConnectedVehicle(charger)) {
+            return charger;
+        }
+    }
+
+    return nullptr;
 }
 
-double IntegrationPluginEnergySimulation::calculateChargedPercentage(Thing *car, double chargedWattHours)
+ThingDescriptor IntegrationPluginEnergySimulation::createHlcVehicleDescriptor() const
 {
-    const double capacity = carCapacity(car);
-    if (capacity <= 0) {
-        qCWarning(dcEnergySimulation()) << "Skipping battery percentage update for" << car->name()
-        << "because capacity is invalid:" << capacity;
+    const QString macAddress = generateRandomMacAddress();
+    ThingDescriptor descriptor(hlcVehicleThingClassId, QString("Simulated HLC vehicle (%1)").arg(macAddress));
+    ParamList params;
+    params.append(Param(hlcVehicleThingMacAddressParamTypeId, macAddress));
+    descriptor.setParams(params);
+    qCDebug(dcEnergySimulation()) << "Created HLC vehicle descriptor with MAC address:" << macAddress;
+    return descriptor;
+}
+
+Thing *IntegrationPluginEnergySimulation::resolveConnectedVehicle(Thing *charger) const
+{
+    if (!charger) {
+        return nullptr;
+    }
+
+    QString connectedVehicleThingId = charger->property(connectedVehiclePropertyName).toString();
+    if (connectedVehicleThingId.isEmpty() && charger->hasState("connectedVehicleThingId")) {
+        connectedVehicleThingId = charger->stateValue("connectedVehicleThingId").toString();
+    }
+    if (connectedVehicleThingId.isEmpty()
+            && (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId)) {
+        connectedVehicleThingId = charger->property(legacyConnectedCarPropertyName).toString();
+    }
+
+    if (connectedVehicleThingId.isEmpty()) {
+        return nullptr;
+    }
+
+    return myThings().findById(ThingId(connectedVehicleThingId));
+}
+
+Thing *IntegrationPluginEnergySimulation::resolveConnectedCharger(Thing *vehicle) const
+{
+    if (!vehicle) {
+        return nullptr;
+    }
+
+    if (vehicle->hasState("connectedChargerThingId")) {
+        const QString connectedChargerThingId = vehicle->stateValue("connectedChargerThingId").toString();
+        if (!connectedChargerThingId.isEmpty()) {
+            if (Thing *charger = myThings().findById(ThingId(connectedChargerThingId))) {
+                return charger;
+            }
+        }
+    }
+
+    foreach (Thing *charger, myThings()) {
+        if (resolveConnectedVehicle(charger) == vehicle) {
+            return charger;
+        }
+    }
+
+    return nullptr;
+}
+
+void IntegrationPluginEnergySimulation::attachVehicleToCharger(Thing *charger, Thing *vehicle)
+{
+    if (!charger || !vehicle) {
+        return;
+    }
+
+    charger->setProperty(connectedVehiclePropertyName, vehicle->id().toString());
+    charger->setProperty(pendingHlcVehiclePropertyName, false);
+    charger->setProperty(pendingHlcVehicleMacAddressPropertyName, QString());
+    if (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId) {
+        charger->setProperty(legacyConnectedCarPropertyName, vehicle->id());
+    }
+
+    if (charger->thingClassId() == wallboxThingClassId) {
+        charger->setStateValue(wallboxPluggedInStateTypeId, true);
+        charger->setStateValue(wallboxSessionEnergyStateTypeId, 0);
+    } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
+        charger->setStateValue(wallboxNoMeterPluggedInStateTypeId, true);
+        charger->setProperty("currentPower", 0);
+    } else {
+        charger->setStateValue("pluggedIn", true);
+    }
+
+    if (charger->hasState("connectedVehicleThingId")) {
+        charger->setStateValue("connectedVehicleThingId", vehicle->id().toString());
+    }
+    if (charger->hasState("vehicleIdentified")) {
+        charger->setStateValue("vehicleIdentified", isHlcChargerThing(charger));
+    }
+    if (charger->hasState("hlcSessionActive")) {
+        charger->setStateValue("hlcSessionActive", isHlcChargerThing(charger));
+    }
+
+    vehicle->setStateValue("pluggedIn", true);
+    setVehicleChargingState(vehicle, "idle");
+    if (vehicle->hasState("connectedChargerThingId")) {
+        vehicle->setStateValue("connectedChargerThingId", charger->id().toString());
+    }
+    if (vehicle->hasState("hlcSessionActive")) {
+        vehicle->setStateValue("hlcSessionActive", isHlcChargerThing(charger));
+    }
+    vehicle->setProperty(lastEnergyUpdatePropertyName, QDateTime::currentDateTime());
+
+    qCDebug(dcEnergySimulation()) << "Vehicle connected to charger:"
+                                  << "vehicleName:" << vehicle->name()
+                                  << "vehicleThingId:" << vehicle->id()
+                                  << "chargerName:" << charger->name()
+                                  << "chargerThingId:" << charger->id();
+}
+
+void IntegrationPluginEnergySimulation::detachVehicleFromCharger(Thing *charger)
+{
+    if (!charger) {
+        return;
+    }
+
+    Thing *vehicle = resolveConnectedVehicle(charger);
+
+    charger->setProperty(connectedVehiclePropertyName, QString());
+    charger->setProperty(pendingHlcVehiclePropertyName, false);
+    charger->setProperty(pendingHlcVehicleMacAddressPropertyName, QString());
+    charger->setProperty(legacyConnectedCarPropertyName, QUuid());
+
+    if (charger->thingClassId() == wallboxThingClassId) {
+        charger->setStateValue(wallboxPluggedInStateTypeId, false);
+        charger->setStateValue(wallboxChargingStateTypeId, false);
+        charger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
+        charger->setStateValue(wallboxSessionEnergyStateTypeId, 0);
+    } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
+        charger->setStateValue(wallboxNoMeterPluggedInStateTypeId, false);
+        charger->setStateValue(wallboxNoMeterChargingStateTypeId, false);
+        charger->setProperty("currentPower", 0);
+    } else {
+        charger->setStateValue("pluggedIn", false);
+        charger->setStateValue("currentPower", 0);
+    }
+
+    if (charger->hasState("connectedVehicleThingId")) {
+        charger->setStateValue("connectedVehicleThingId", "");
+    }
+    if (charger->hasState("vehicleIdentified")) {
+        charger->setStateValue("vehicleIdentified", false);
+    }
+    if (charger->hasState("hlcSessionActive")) {
+        charger->setStateValue("hlcSessionActive", false);
+    }
+
+    if (!vehicle) {
+        return;
+    }
+
+    vehicle->setStateValue("pluggedIn", false);
+    setVehicleChargingState(vehicle, "idle");
+    if (vehicle->hasState("connectedChargerThingId")) {
+        vehicle->setStateValue("connectedChargerThingId", "");
+    }
+    if (vehicle->hasState("hlcSessionActive")) {
+        vehicle->setStateValue("hlcSessionActive", false);
+    }
+    vehicle->setProperty(lastEnergyUpdatePropertyName, QDateTime::currentDateTime());
+
+    qCDebug(dcEnergySimulation()) << "Vehicle disconnected from charger:"
+                                  << "vehicleName:" << vehicle->name()
+                                  << "vehicleThingId:" << vehicle->id()
+                                  << "chargerName:" << charger->name()
+                                  << "chargerThingId:" << charger->id();
+}
+
+double IntegrationPluginEnergySimulation::updateEvBatteryStateFromElapsedEnergy(Thing *vehicle, double requestedPower, double hours)
+{
+    if (!vehicle) {
         return 0;
     }
 
-    return chargedWattHours / 1000 * 100 / capacity;
+    syncVehicleCapacityState(vehicle);
+
+    const double capacity = vehicle->stateValue("capacity").toDouble();
+    if (capacity <= 0) {
+        setVehicleChargingState(vehicle, "idle");
+        return 0;
+    }
+
+    double storedEnergy = vehicle->property(storedEnergyPropertyName).toDouble();
+    if (!vehicle->property(storedEnergyPropertyName).isValid()) {
+        storedEnergy = capacity * vehicle->stateValue("batteryLevel").toInt() / 100.0;
+    }
+    storedEnergy = qBound(0.0, storedEnergy, capacity);
+
+    double effectivePower = requestedPower;
+    if (requestedPower > 0 && qFuzzyCompare(storedEnergy + 1.0, capacity + 1.0)) {
+        effectivePower = 0;
+    } else if (requestedPower < 0 && qFuzzyIsNull(storedEnergy)) {
+        effectivePower = 0;
+    }
+
+    if (hours > 0) {
+        const double requestedEnergy = effectivePower * hours / 1000.0;
+        const double updatedEnergy = qBound(0.0, storedEnergy + requestedEnergy, capacity);
+        const double effectiveEnergy = updatedEnergy - storedEnergy;
+        storedEnergy = updatedEnergy;
+        effectivePower = effectiveEnergy * 1000.0 / hours;
+    }
+
+    const int batteryLevel = qBound(0, qRound((storedEnergy / capacity) * 100.0), 100);
+    vehicle->setStateValue("batteryLevel", batteryLevel);
+    vehicle->setStateValue("batteryCritical", batteryLevel < 10);
+    if (effectivePower > 0.01) {
+        setVehicleChargingState(vehicle, "charging");
+    } else if (effectivePower < -0.01) {
+        setVehicleChargingState(vehicle, "discharging");
+    } else {
+        setVehicleChargingState(vehicle, "idle");
+    }
+    vehicle->setProperty(storedEnergyPropertyName, storedEnergy);
+
+    return effectivePower;
+}
+
+void IntegrationPluginEnergySimulation::syncVehicleCapacityState(Thing *vehicle)
+{
+    if (!vehicle) {
+        return;
+    }
+
+    if (vehicle->thingClassId() == genericCarThingClassId) {
+        vehicle->setStateValue("acPhaseCount", vehicle->setting(genericCarSettingsPhaseCountParamTypeId));
+        vehicle->setStateValue(genericCarCapacityStateTypeId, vehicle->setting(genericCarSettingsCapacityParamTypeId));
+    } else if (vehicle->thingClassId() == dcVehicleThingClassId) {
+        vehicle->setStateValue(dcVehicleCapacityStateTypeId, vehicle->setting(dcVehicleSettingsCapacityParamTypeId));
+    }
+}
+
+void IntegrationPluginEnergySimulation::syncVehicleBatteryState(Thing *vehicle)
+{
+    if (!vehicle) {
+        return;
+    }
+
+    syncVehicleCapacityState(vehicle);
+
+    const int batteryLevel = qBound(0, vehicle->stateValue("batteryLevel").toInt(), 100);
+    const double capacity = vehicle->stateValue("capacity").toDouble();
+
+    vehicle->setStateValue("batteryLevel", batteryLevel);
+    vehicle->setStateValue("batteryCritical", batteryLevel < 10);
+    if (vehicle->hasState("chargingState") && vehicle->stateValue("chargingState").toString().isEmpty()) {
+        vehicle->setStateValue("chargingState", "idle");
+    }
+    if (capacity > 0) {
+        vehicle->setProperty(storedEnergyPropertyName, capacity * batteryLevel / 100.0);
+    }
+    vehicle->setProperty(lastEnergyUpdatePropertyName, QDateTime::currentDateTime());
+}
+
+QStringList IntegrationPluginEnergySimulation::phasesForConnection(const QString &phase) const
+{
+    if (phase == "All" || phase == "ABC") {
+        return {"A", "B", "C"};
+    }
+    if (phase == "AB") {
+        return {"A", "B"};
+    }
+    if (phase == "AC") {
+        return {"A", "C"};
+    }
+    if (phase == "BC") {
+        return {"B", "C"};
+    }
+    if (phase == "A" || phase == "B" || phase == "C") {
+        return {phase};
+    }
+
+    return {"A"};
+}
+
+void IntegrationPluginEnergySimulation::addPowerToPhaseTotals(QHash<QString, double> &phaseTotals, const QString &phase, double power) const
+{
+    const QStringList phases = phasesForConnection(phase);
+    const double phasePower = power / phases.count();
+
+    foreach (const QString &connectionPhase, phases) {
+        phaseTotals[connectionPhase] += phasePower;
+    }
 }
 
 QPair<QDateTime, QDateTime> IntegrationPluginEnergySimulation::calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime)
@@ -800,12 +1328,12 @@ QPair<QDateTime, QDateTime> IntegrationPluginEnergySimulation::calculateSunriseS
     qreal raSet = qRound(tmp + 360) % 360 + (tmp - qFloor(tmp));
 
     // Right ascension value needs to be in the same quadrant as L
-    qlonglong lQuadrantRise = qFloor(lRise / 90) * 90;
-    qlonglong raQuadrantRise = qFloor(raRise / 90) * 90;
+    qlonglong lQuadrantRise  = qFloor(lRise/90) * 90;
+    qlonglong raQuadrantRise = qFloor(raRise/90) * 90;
     raRise = raRise + (lQuadrantRise - raQuadrantRise);
 
-    qlonglong lQuadrantSet = qFloor(lSet / 90) * 90;
-    qlonglong raQuadrantSet = qFloor(raSet / 90) * 90;
+    qlonglong lQuadrantSet  = qFloor(lSet/90) * 90;
+    qlonglong raQuadrantSet = qFloor(raSet/90) * 90;
     raSet = raSet + (lQuadrantSet - raQuadrantSet);
 
     // Right ascension value needs to be converted into hours
