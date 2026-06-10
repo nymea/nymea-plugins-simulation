@@ -640,6 +640,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
 
         dcCharger->setStateValue("currentPower", effectivePower);
+        dcCharger->setStateValue("charging", effectivePower != 0);
         if (effectivePower > 0) {
             dcCharger->setStateValue("totalEnergyConsumed", dcCharger->stateValue("totalEnergyConsumed").toDouble() + intervalEnergy(effectivePower));
         }
@@ -671,6 +672,7 @@ void IntegrationPluginEnergySimulation::updateSimulation()
         }
 
         hlcCharger->setStateValue("currentPower", effectivePower);
+        hlcCharger->setStateValue("charging", effectivePower != 0);
         if (effectivePower > 0) {
             hlcCharger->setStateValue("totalEnergyConsumed", hlcCharger->stateValue("totalEnergyConsumed").toDouble() + intervalEnergy(effectivePower));
         } else if (effectivePower < 0) {
