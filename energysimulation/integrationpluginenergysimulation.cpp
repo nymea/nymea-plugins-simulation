@@ -27,6 +27,7 @@
 #include "plugintimer.h"
 #include "plugininfo.h"
 
+#include <algorithm>
 #include <QtMath>
 #include <QRandomGenerator>
 
@@ -76,9 +77,24 @@ bool isDcChargeableVehicleThing(Thing *thing)
     return supportsChargingInterface(thing, "dc");
 }
 
+bool isAcChargeableVehicleThing(Thing *thing)
+{
+    return supportsChargingInterface(thing, "ac");
+}
+
 bool isAcChargerThing(Thing *charger)
 {
     return charger && (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId);
+}
+
+bool thingNameLessThan(Thing *left, Thing *right)
+{
+    const int nameCompare = QString::localeAwareCompare(left->name(), right->name());
+    if (nameCompare != 0) {
+        return nameCompare < 0;
+    }
+
+    return left->id().toString() < right->id().toString();
 }
 
 bool isVehicleAvailable(Thing *vehicle)
@@ -219,6 +235,14 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == wallboxThingClassId) {
+        thing->setProperty(connectedVehiclePropertyName, QString());
+        thing->setProperty(legacyConnectedCarPropertyName, QUuid());
+        thing->setStateValue(wallboxPluggedInStateTypeId, false);
+        thing->setStateValue(wallboxChargingStateTypeId, false);
+        thing->setStateValue(wallboxCurrentPowerStateTypeId, 0);
+        thing->setStateValue(wallboxSessionEnergyStateTypeId, 0);
+        thing->setStateValue("connectedVehicleThingId", "");
+
         connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
             if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
@@ -235,6 +259,13 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == wallboxNoMeterThingClassId) {
+        thing->setProperty(connectedVehiclePropertyName, QString());
+        thing->setProperty(legacyConnectedCarPropertyName, QUuid());
+        thing->setStateValue(wallboxNoMeterPluggedInStateTypeId, false);
+        thing->setStateValue(wallboxNoMeterChargingStateTypeId, false);
+        thing->setProperty("currentPower", 0);
+        thing->setStateValue("connectedVehicleThingId", "");
+
         connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value) {
             if (settingTypeId == wallboxNoMeterSettingsMaxChargingCurrentUpperLimitParamTypeId) {
                 thing->setStateMaxValue(wallboxNoMeterMaxChargingCurrentStateTypeId, value);
@@ -266,6 +297,15 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
 
     if (isElectricVehicleThing(thing)) {
         syncVehicleBatteryState(thing);
+
+        if (thing->thingClassId() == apiCarThingClassId || thing->thingClassId() == genericCarThingClassId) {
+            thing->setStateValue("pluggedIn", false);
+            setVehicleChargingState(thing, "idle");
+            if (thing->hasState("connectedChargerThingId")) {
+                thing->setStateValue("connectedChargerThingId", "");
+            }
+            thing->setProperty(lastEnergyUpdatePropertyName, QDateTime::currentDateTime());
+        }
 
         if (thing->thingClassId() == genericCarThingClassId || thing->thingClassId() == dcVehicleThingClassId) {
             connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
@@ -316,6 +356,38 @@ void IntegrationPluginEnergySimulation::thingRemoved(Thing *thing)
 
 void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
 {
+    auto connectAcVehicle = [this, info](const ParamTypeId &thingIdParamTypeId) -> bool {
+        if (resolveConnectedVehicle(info->thing())) {
+            info->finish(Thing::ThingErrorThingInUse, "Wallbox already has a connected vehicle.");
+            return false;
+        }
+
+        const QString vehicleThingIdValue = info->action().paramValue(thingIdParamTypeId).toString().trimmed();
+        Thing *vehicle = nullptr;
+        if (vehicleThingIdValue.isEmpty()) {
+            vehicle = findFreeAcVehicle();
+            if (!vehicle) {
+                info->finish(Thing::ThingErrorHardwareNotAvailable, "No free AC-capable vehicle found.");
+                return false;
+            }
+        } else {
+            ThingId vehicleThingId(vehicleThingIdValue);
+            vehicle = myThings().findById(vehicleThingId);
+            if (!isAcChargeableVehicleThing(vehicle)) {
+                info->finish(Thing::ThingErrorThingNotFound, "Vehicle thing not found.");
+                return false;
+            }
+
+            if (!isVehicleAvailable(vehicle)) {
+                info->finish(Thing::ThingErrorThingInUse, "Vehicle is already connected to another charger.");
+                return false;
+            }
+        }
+
+        attachVehicleToCharger(info->thing(), vehicle);
+        return true;
+    };
+
     if (info->thing()->thingClassId() == stoveThingClassId) {
         if (info->action().actionTypeId() == stovePowerActionTypeId) {
             info->thing()->setStateValue(stovePowerStateTypeId, info->action().paramValue(stovePowerActionPowerParamTypeId).toBool());
@@ -333,6 +405,15 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         }
         if (info->action().actionTypeId() == wallboxDisconnectActionTypeId) {
             info->thing()->setStateValue(wallboxConnectedStateTypeId, false);
+        }
+        const auto wallboxConnectVehicleActionType = info->thing()->thingClass().actionTypes().findByName("connectVehicle");
+        if (info->action().actionTypeId() == wallboxConnectVehicleActionType.id()) {
+            if (!connectAcVehicle(wallboxConnectVehicleActionType.paramTypes().findByName("thingId").id())) {
+                return;
+            }
+        }
+        if (info->action().actionTypeId() == info->thing()->thingClass().actionTypes().findByName("disconnectVehicle").id()) {
+            detachVehicleFromCharger(info->thing());
         }
 
         if (info->action().actionTypeId() == wallboxDesiredPhaseCountActionTypeId) {
@@ -354,6 +435,15 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
         }
         if (info->action().actionTypeId() == wallboxNoMeterDisconnectActionTypeId) {
             info->thing()->setStateValue(wallboxNoMeterConnectedStateTypeId, false);
+        }
+        const auto wallboxNoMeterConnectVehicleActionType = info->thing()->thingClass().actionTypes().findByName("connectVehicle");
+        if (info->action().actionTypeId() == wallboxNoMeterConnectVehicleActionType.id()) {
+            if (!connectAcVehicle(wallboxNoMeterConnectVehicleActionType.paramTypes().findByName("thingId").id())) {
+                return;
+            }
+        }
+        if (info->action().actionTypeId() == info->thing()->thingClass().actionTypes().findByName("disconnectVehicle").id()) {
+            detachVehicleFromCharger(info->thing());
         }
         if (info->action().actionTypeId() == wallboxNoMeterDesiredPhaseCountActionTypeId) {
             uint desiredPhaseCount = info->action().paramValue(wallboxNoMeterDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt();
@@ -1010,15 +1100,30 @@ Thing *IntegrationPluginEnergySimulation::findFreeDcVehicle() const
     return nullptr;
 }
 
-Thing *IntegrationPluginEnergySimulation::findFreeAcCharger() const
+Thing *IntegrationPluginEnergySimulation::findFreeAcVehicle() const
 {
-    foreach (Thing *charger, myThings()) {
-        if (isAcChargerThing(charger) && !resolveConnectedVehicle(charger)) {
-            return charger;
+    QList<Thing *> candidates;
+    foreach (Thing *vehicle, myThings()) {
+        if (isAcChargeableVehicleThing(vehicle) && isVehicleAvailable(vehicle)) {
+            candidates.append(vehicle);
         }
     }
 
-    return nullptr;
+    std::sort(candidates.begin(), candidates.end(), thingNameLessThan);
+    return candidates.isEmpty() ? nullptr : candidates.first();
+}
+
+Thing *IntegrationPluginEnergySimulation::findFreeAcCharger() const
+{
+    QList<Thing *> candidates;
+    foreach (Thing *charger, myThings()) {
+        if (isAcChargerThing(charger) && !resolveConnectedVehicle(charger)) {
+            candidates.append(charger);
+        }
+    }
+
+    std::sort(candidates.begin(), candidates.end(), thingNameLessThan);
+    return candidates.isEmpty() ? nullptr : candidates.first();
 }
 
 ThingDescriptor IntegrationPluginEnergySimulation::createHlcVehicleDescriptor() const

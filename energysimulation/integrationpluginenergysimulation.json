@@ -131,6 +131,13 @@
                             "type": "double",
                             "unit": "KiloWattHour",
                             "defaultValue": 0
+                        },
+                        {
+                            "id": "531838d7-02a2-4d7f-a524-5a18fea00d07",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
                         }
                     ],
                     "actionTypes": [
@@ -143,6 +150,24 @@
                             "id": "3bd40690-f726-47c7-b52b-779d1d8933f3",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
+                        },
+                        {
+                            "id": "0e706b67-69fb-40ca-9a3b-72d16c8b2ea2",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "4b68893b-3d4a-4fd7-af38-d208d628ef09",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "b8bdd44c-c1cd-40e6-ad48-24be7a4084c5",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
                         }
                     ]
                 },
@@ -236,6 +261,13 @@
                             "possibleValues": [1, 3],
                             "defaultValue": 3,
                             "writable": true
+                        },
+                        {
+                            "id": "e6e991ea-7bec-4f7f-a443-2aeeaf603e72",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
                         }
                     ],
                     "actionTypes": [
@@ -248,6 +280,24 @@
                             "id": "ef413aed-c15b-434b-afd4-f85a26a8a62b",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
+                        },
+                        {
+                            "id": "6e80d527-cb09-4eab-93b4-87d0242b3aa2",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "42bbea6c-7895-4221-a21f-639f338eebb5",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "be78d9a5-59b2-4239-ab31-b30b076b93b4",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
                         }
                     ]
                 },

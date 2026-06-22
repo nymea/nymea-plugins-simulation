@@ -53,6 +53,7 @@ private:
     QString generateRandomMacAddress() const;
     Thing *findFreeHlcVehicle() const;
     Thing *findFreeDcVehicle() const;
+    Thing *findFreeAcVehicle() const;
     Thing *findFreeAcCharger() const;
     ThingDescriptor createHlcVehicleDescriptor() const;
     Thing *resolveConnectedVehicle(Thing *charger) const;
