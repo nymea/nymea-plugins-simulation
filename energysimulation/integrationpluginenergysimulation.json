@@ -316,6 +316,347 @@
                     ]
                 },
                 {
+                    "name": "wallboxRfid",
+                    "displayName": "Simulated RFID wallbox",
+                    "id": "050ee65c-912e-4e0e-9c19-596b92e2a0d4",
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "evchargerac",
+                        "energymeter",
+                        "smartmeterconsumer",
+                        "connectable",
+                        "rfid"
+                    ],
+                    "settingsTypes": [
+                        {
+                            "id": "ff70fc5d-fab2-4143-a17b-8b27f65cc2ea",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
+                            "defaultValue": "All"
+                        },
+                        {
+                            "id": "11dd1b14-493f-4f8e-a5d8-480b12cff51d",
+                            "name": "maxChargingCurrentUpperLimit",
+                            "displayName": "Upper limit for maximum charging current",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 63
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "1432e2d4-3467-43ce-8be2-2584d8a193e3",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
+                        {
+                            "id": "7927983d-3ac7-4c55-929e-413b77a1ce80",
+                            "name": "power",
+                            "displayName": "Charging enabled",
+                            "displayNameAction": "Enable/disable charging",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "writable": true
+                        },
+                        {
+                            "id": "30f7047d-b00b-4d28-a79a-a15ed42979f1",
+                            "name": "maxChargingCurrent",
+                            "displayName": "Maximum charging current",
+                            "displayNameAction": "Set maximum charging current",
+                            "type": "double",
+                            "defaultValue": 6,
+                            "minValue": 6,
+                            "maxValue": 32,
+                            "stepSize": 0.1,
+                            "unit": "Ampere",
+                            "writable": true
+                        },
+                        {
+                            "id": "34237736-da67-48f9-8a13-673415976a66",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "f866fb77-80b9-47a0-8bf8-705cad64e039",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "495b9c60-a67f-42e2-8786-b0ed8ae20eda",
+                            "name": "totalEnergyProduced",
+                            "displayName": "Total produced energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "153dec61-b73e-47d4-8678-b1e30a5709bf",
+                            "name": "energyConsumedPhaseA",
+                            "displayName": "Consumed energy (Phase A)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "ac05083d-d934-46a8-a433-831bfa973730",
+                            "name": "energyConsumedPhaseB",
+                            "displayName": "Consumed energy (Phase B)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "5402e936-fccf-41d8-afc3-b1576ae56d2f",
+                            "name": "energyConsumedPhaseC",
+                            "displayName": "Consumed energy (Phase C)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "38d31314-b91d-4a3f-95ec-689b17c8e2a4",
+                            "name": "energyProducedPhaseA",
+                            "displayName": "Produced energy (Phase A)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "ef8b8bda-3bc1-4da7-8e67-6be3c8424282",
+                            "name": "energyProducedPhaseB",
+                            "displayName": "Produced energy (Phase B)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "6cde549e-ee23-4990-8f91-42ca816aabbf",
+                            "name": "energyProducedPhaseC",
+                            "displayName": "Produced energy (Phase C)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "3454b055-5e8d-4a6c-85eb-be8446be1a17",
+                            "name": "currentPowerPhaseA",
+                            "displayName": "Current power usage (Phase A)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "30140448-214b-4897-aff3-95ffa5a8a7a2",
+                            "name": "currentPowerPhaseB",
+                            "displayName": "Current power usage (Phase B)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "f0ab2406-c014-4691-ba3c-861ededdcb15",
+                            "name": "currentPowerPhaseC",
+                            "displayName": "Current power usage (Phase C)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "86d84e26-e50e-4a65-9b6a-134455a62d04",
+                            "name": "currentPhaseA",
+                            "displayName": "Current (Phase A)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "47105efb-1a17-44d7-8853-103f13adca82",
+                            "name": "currentPhaseB",
+                            "displayName": "Current (Phase B)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "91503e37-98ab-408d-9f02-974e04ea713a",
+                            "name": "currentPhaseC",
+                            "displayName": "Current (Phase C)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "950092d4-42e1-40ac-8209-d17df06ac0f7",
+                            "name": "voltagePhaseA",
+                            "displayName": "Voltage (Phase A)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "561021d0-71db-4e2b-9d12-36340b179d33",
+                            "name": "voltagePhaseB",
+                            "displayName": "Voltage (Phase B)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "bd7d6e06-94ce-4681-8203-cf36eb0a77c4",
+                            "name": "voltagePhaseC",
+                            "displayName": "Voltage (Phase C)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "34ced041-3e12-419f-a15c-263d6be104bb",
+                            "name": "pluggedIn",
+                            "displayName": "Car is plugged in",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "5c85a546-06fd-4dfa-ab37-56c9f27d8523",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "d684d035-24e7-4fce-aa14-2dcc030c184d",
+                            "name": "phaseCount",
+                            "displayName": "Active phases",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "defaultValue": 1
+                        },
+                        {
+                            "id": "9f98bda4-ce82-4eeb-9526-57ab580fe960",
+                            "name": "desiredPhaseCount",
+                            "displayName": "Desired phase count",
+                            "displayNameAction": "Set desired phase count",
+                            "type": "uint",
+                            "minValue": 1,
+                            "maxValue": 3,
+                            "possibleValues": [
+                                1,
+                                3
+                            ],
+                            "defaultValue": 3,
+                            "writable": true
+                        },
+                        {
+                            "id": "5889eac8-2382-4aa4-bd14-d729e92d931e",
+                            "name": "sessionEnergy",
+                            "displayName": "Session energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "a1af5a7c-18e9-4c87-834d-549f5c435ca6",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        },
+                        {
+                            "id": "caece9e3-ed1d-48b5-9182-6e6329a7b527",
+                            "name": "authorizedUser",
+                            "displayName": "Authorized user",
+                            "type": "QString",
+                            "defaultValue": ""
+                        },
+                        {
+                            "id": "5a44385f-2a3c-4b4c-af70-29d1838b075b",
+                            "name": "authorizedTag",
+                            "displayName": "Authorized tag",
+                            "type": "QString",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "98ef5193-86e4-4442-a79e-c128e10fdd7c",
+                            "name": "connect",
+                            "displayName": "Connect wallbox"
+                        },
+                        {
+                            "id": "7349c207-fd81-4d11-9518-8a90bac128d7",
+                            "name": "disconnect",
+                            "displayName": "Disconnect wallbox"
+                        },
+                        {
+                            "id": "e0b0b816-c3cc-4516-8abe-479aae8f6000",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "e8e006b0-6af8-4eeb-bfcf-454449c8ab12",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "d000eaf7-8e07-40a2-a626-bb5c84435977",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
+                        },
+                        {
+                            "id": "bacc0ddd-90a8-419d-90a5-3ac4a1d148b9",
+                            "name": "presentTag",
+                            "displayName": "Present tag",
+                            "paramTypes": [
+                                {
+                                    "id": "bd74edfe-fa28-4966-82ac-388124a56a80",
+                                    "name": "code",
+                                    "displayName": "Code",
+                                    "type": "QString"
+                                }
+                            ]
+                        }
+                    ],
+                    "eventTypes": [
+                        {
+                            "id": "5c7a7e7b-eb4f-4cef-857e-1f6d9f33ce89",
+                            "name": "tagDetected",
+                            "displayName": "Tag detected",
+                            "paramTypes": [
+                                {
+                                    "id": "cea0bb87-a6e7-4e41-a707-945dcc22b2d6",
+                                    "name": "code",
+                                    "displayName": "Code",
+                                    "type": "QString"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "wallboxNoMeter",
                     "displayName": "Simulated wallbox (no meter)",
                     "id": "d26123e6-71f4-4cfe-bc61-5709be2293f0",

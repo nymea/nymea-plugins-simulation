@@ -86,7 +86,9 @@ bool isAcChargeableVehicleThing(Thing *thing)
 
 bool isAcChargerThing(Thing *charger)
 {
-    return charger && (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId);
+    return charger && (charger->thingClassId() == wallboxThingClassId
+                       || charger->thingClassId() == wallboxRfidThingClassId
+                       || charger->thingClassId() == wallboxNoMeterThingClassId);
 }
 
 bool thingNameLessThan(Thing *left, Thing *right)
@@ -236,7 +238,7 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         connect(m_timer, &PluginTimer::timeout, this, &IntegrationPluginEnergySimulation::updateSimulation);
     }
 
-    if (thing->thingClassId() == wallboxThingClassId) {
+    if (thing->thingClassId() == wallboxThingClassId || thing->thingClassId() == wallboxRfidThingClassId) {
         thing->setProperty(connectedVehiclePropertyName, QString());
         thing->setProperty(legacyConnectedCarPropertyName, QUuid());
         thing->setStateValue("pluggedIn", false);
@@ -247,17 +249,31 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         clearWallboxPhaseMeasurements(thing);
         thing->setStateValue("connectedVehicleThingId", "");
         thing->setProperty(pendingPhaseSwitchPropertyName, false);
-        thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, thing->setting(wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId));
+        if (thing->thingClassId() == wallboxThingClassId) {
+            thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, thing->setting(wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId));
+        } else {
+            thing->setStateMaxValue(wallboxRfidMaxChargingCurrentStateTypeId, thing->setting(wallboxRfidSettingsMaxChargingCurrentUpperLimitParamTypeId));
+            thing->setStateValue(wallboxRfidAuthorizedUserStateTypeId, QString());
+            thing->setStateValue(wallboxRfidAuthorizedTagStateTypeId, QString());
+        }
 
         connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
-            if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId) {
-                thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, value);
+            if (settingTypeId == wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId
+                    || settingTypeId == wallboxRfidSettingsMaxChargingCurrentUpperLimitParamTypeId) {
+                thing->setStateMaxValue(thing->thingClassId() == wallboxThingClassId
+                                        ? wallboxMaxChargingCurrentStateTypeId
+                                        : wallboxRfidMaxChargingCurrentStateTypeId, value);
             }
-            if (settingTypeId == wallboxSettingsPhaseParamTypeId) {
+            if (settingTypeId == wallboxSettingsPhaseParamTypeId
+                    || settingTypeId == wallboxRfidSettingsPhaseParamTypeId) {
                 if (value.toString() == "All") {
-                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1,3});
+                    thing->setStatePossibleValues(thing->thingClassId() == wallboxThingClassId
+                                                  ? wallboxDesiredPhaseCountStateTypeId
+                                                  : wallboxRfidDesiredPhaseCountStateTypeId, {1,3});
                 } else {
-                    thing->setStatePossibleValues(wallboxDesiredPhaseCountStateTypeId, {1});
+                    thing->setStatePossibleValues(thing->thingClassId() == wallboxThingClassId
+                                                  ? wallboxDesiredPhaseCountStateTypeId
+                                                  : wallboxRfidDesiredPhaseCountStateTypeId, {1});
                 }
             }
             updateSimulation();
@@ -429,6 +445,41 @@ void IntegrationPluginEnergySimulation::executeAction(ThingActionInfo *info)
             qCDebug(dcEnergySimulation()) << "Setting desired phase count to" << desiredPhaseCount;
             schedulePhaseSwitchIfCharging(info->thing(), desiredPhaseCount);
             info->thing()->setStateValue(wallboxDesiredPhaseCountStateTypeId, desiredPhaseCount);
+        }
+    }
+
+    if (info->thing()->thingClassId() == wallboxRfidThingClassId) {
+        if (info->action().actionTypeId() == wallboxRfidPowerActionTypeId) {
+            info->thing()->setStateValue(wallboxRfidPowerStateTypeId, info->action().paramValue(wallboxRfidPowerActionPowerParamTypeId).toBool());
+        }
+        if (info->action().actionTypeId() == wallboxRfidMaxChargingCurrentActionTypeId) {
+            info->thing()->setStateValue(wallboxRfidMaxChargingCurrentStateTypeId, info->action().paramValue(wallboxRfidMaxChargingCurrentActionMaxChargingCurrentParamTypeId));
+        }
+        if (info->action().actionTypeId() == wallboxRfidConnectActionTypeId) {
+            info->thing()->setStateValue(wallboxRfidConnectedStateTypeId, true);
+        }
+        if (info->action().actionTypeId() == wallboxRfidDisconnectActionTypeId) {
+            info->thing()->setStateValue(wallboxRfidConnectedStateTypeId, false);
+        }
+        const auto wallboxRfidConnectVehicleActionType = info->thing()->thingClass().actionTypes().findByName("connectVehicle");
+        if (info->action().actionTypeId() == wallboxRfidConnectVehicleActionType.id()) {
+            if (!connectAcVehicle(wallboxRfidConnectVehicleActionType.paramTypes().findByName("thingId").id())) {
+                return;
+            }
+        }
+        if (info->action().actionTypeId() == info->thing()->thingClass().actionTypes().findByName("disconnectVehicle").id()) {
+            detachVehicleFromCharger(info->thing());
+        }
+        if (info->action().actionTypeId() == wallboxRfidDesiredPhaseCountActionTypeId) {
+            uint desiredPhaseCount = info->action().paramValue(wallboxRfidDesiredPhaseCountActionDesiredPhaseCountParamTypeId).toInt();
+            qCDebug(dcEnergySimulation()) << "Setting desired phase count to" << desiredPhaseCount;
+            schedulePhaseSwitchIfCharging(info->thing(), desiredPhaseCount);
+            info->thing()->setStateValue(wallboxRfidDesiredPhaseCountStateTypeId, desiredPhaseCount);
+        }
+        if (info->action().actionTypeId() == wallboxRfidPresentTagActionTypeId) {
+            const QString code = info->action().paramValue(wallboxRfidPresentTagActionCodeParamTypeId).toString();
+            ParamList params = ParamList() << Param(wallboxRfidTagDetectedEventCodeParamTypeId, code);
+            emit emitEvent(Event(wallboxRfidTagDetectedEventTypeId, info->thing()->id(), params));
         }
     }
 
@@ -688,6 +739,43 @@ void IntegrationPluginEnergySimulation::updateSimulation()
             evCharger->setStateValue(wallboxTotalEnergyConsumedStateTypeId, evCharger->stateValue(wallboxTotalEnergyConsumedStateTypeId).toDouble() + chargedEnergy);
             evCharger->setStateValue(wallboxSessionEnergyStateTypeId, evCharger->stateValue(wallboxSessionEnergyStateTypeId).toDouble() + chargedEnergy);
             setWallboxPhaseMeasurements(evCharger, effectivePower, acPhaseConnection(evCharger, evCharger->stateValue(wallboxPhaseCountStateTypeId).toUInt()), chargedEnergy);
+        } else {
+            clearWallboxPhaseMeasurements(evCharger);
+        }
+    }
+
+    foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxRfidThingClassId)) {
+        Thing *car = resolveConnectedVehicle(evCharger);
+        double effectivePower = 0;
+        if (car && evCharger->stateValue(wallboxRfidConnectedStateTypeId).toBool() && evCharger->stateValue(wallboxRfidPowerStateTypeId).toBool()) {
+            if (!consumePendingPhaseSwitch(evCharger, car, now)) {
+                QDateTime lastEnergyUpdateTime = car->property(lastEnergyUpdatePropertyName).toDateTime();
+                if (!lastEnergyUpdateTime.isValid()) {
+                    car->setProperty(lastEnergyUpdatePropertyName, now);
+                } else {
+                    double maxChargingCurrent = evCharger->stateValue(wallboxRfidMaxChargingCurrentStateTypeId).toDouble();
+                    uint phaseCount = effectiveAcPhaseCount(evCharger, car);
+                    double requestedPower = 230.0 * maxChargingCurrent * phaseCount;
+                    double hours = lastEnergyUpdateTime.msecsTo(now) / 1000.0 / 60.0 / 60.0;
+
+                    evCharger->setStateValue(wallboxRfidPhaseCountStateTypeId, phaseCount);
+                    effectivePower = updateEvBatteryStateFromElapsedEnergy(car, requestedPower, hours);
+                    car->setProperty(lastEnergyUpdatePropertyName, now);
+                }
+            }
+        } else if (car) {
+            resetVehicleChargingSession(car, now);
+            evCharger->setProperty(pendingPhaseSwitchPropertyName, false);
+        }
+
+        evCharger->setStateValue(wallboxRfidChargingStateTypeId, effectivePower > 0);
+        evCharger->setStateValue(wallboxRfidCurrentPowerStateTypeId, effectivePower);
+        evCharger->setStateValue("totalEnergyProduced", 0);
+        if (effectivePower > 0) {
+            double chargedEnergy = intervalEnergy(effectivePower);
+            evCharger->setStateValue(wallboxRfidTotalEnergyConsumedStateTypeId, evCharger->stateValue(wallboxRfidTotalEnergyConsumedStateTypeId).toDouble() + chargedEnergy);
+            evCharger->setStateValue(wallboxRfidSessionEnergyStateTypeId, evCharger->stateValue(wallboxRfidSessionEnergyStateTypeId).toDouble() + chargedEnergy);
+            setWallboxPhaseMeasurements(evCharger, effectivePower, acPhaseConnection(evCharger, evCharger->stateValue(wallboxRfidPhaseCountStateTypeId).toUInt()), chargedEnergy);
         } else {
             clearWallboxPhaseMeasurements(evCharger);
         }
@@ -959,12 +1047,18 @@ void IntegrationPluginEnergySimulation::updateSimulation()
     // And add simulation devices consumption
     foreach (Thing *consumer, myThings()) {
         if (consumer->thingClass().interfaces().contains("smartmeterconsumer")) {
-            addPowerToPhaseTotals(totalPhasesConsumption, consumer->setting("phase").toString(), consumer->stateValue("currentPower").toDouble());
+            QString phaseConnection = consumer->setting("phase").toString();
+            if (consumer->thingClassId() == wallboxThingClassId || consumer->thingClassId() == wallboxRfidThingClassId) {
+                phaseConnection = acPhaseConnection(consumer, consumer->thingClassId() == wallboxThingClassId
+                                                    ? consumer->stateValue(wallboxPhaseCountStateTypeId).toUInt()
+                                                    : consumer->stateValue(wallboxRfidPhaseCountStateTypeId).toUInt());
+            }
+            addPowerToPhaseTotals(totalPhasesConsumption, phaseConnection, consumer->stateValue("currentPower").toDouble());
         }
     }
 
     foreach (Thing *evCharger, myThings().filterByThingClassId(wallboxNoMeterThingClassId)) {
-        addPowerToPhaseTotals(totalPhasesConsumption, evCharger->setting("phase").toString(), evCharger->property("currentPower").toDouble());
+        addPowerToPhaseTotals(totalPhasesConsumption, acPhaseConnection(evCharger, evCharger->stateValue(wallboxNoMeterPhaseCountStateTypeId).toUInt()), evCharger->property("currentPower").toDouble());
     }
 
     // Sum up all phases for the total consumption/production (momentary, in Watt)
@@ -1206,13 +1300,19 @@ void IntegrationPluginEnergySimulation::attachVehicleToCharger(Thing *charger, T
     charger->setProperty(connectedVehiclePropertyName, vehicle->id().toString());
     charger->setProperty(pendingHlcVehiclePropertyName, false);
     charger->setProperty(pendingHlcVehicleMacAddressPropertyName, QString());
-    if (charger->thingClassId() == wallboxThingClassId || charger->thingClassId() == wallboxNoMeterThingClassId) {
+    if (charger->thingClassId() == wallboxThingClassId
+            || charger->thingClassId() == wallboxRfidThingClassId
+            || charger->thingClassId() == wallboxNoMeterThingClassId) {
         charger->setProperty(legacyConnectedCarPropertyName, vehicle->id());
     }
 
     if (charger->thingClassId() == wallboxThingClassId) {
         charger->setStateValue(wallboxPluggedInStateTypeId, true);
         charger->setStateValue(wallboxSessionEnergyStateTypeId, 0);
+        clearWallboxPhaseMeasurements(charger);
+    } else if (charger->thingClassId() == wallboxRfidThingClassId) {
+        charger->setStateValue(wallboxRfidPluggedInStateTypeId, true);
+        charger->setStateValue(wallboxRfidSessionEnergyStateTypeId, 0);
         clearWallboxPhaseMeasurements(charger);
     } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
         charger->setStateValue(wallboxNoMeterPluggedInStateTypeId, true);
@@ -1266,6 +1366,14 @@ void IntegrationPluginEnergySimulation::detachVehicleFromCharger(Thing *charger)
         charger->setStateValue(wallboxChargingStateTypeId, false);
         charger->setStateValue(wallboxCurrentPowerStateTypeId, 0);
         charger->setStateValue(wallboxSessionEnergyStateTypeId, 0);
+        clearWallboxPhaseMeasurements(charger);
+    } else if (charger->thingClassId() == wallboxRfidThingClassId) {
+        charger->setStateValue(wallboxRfidPluggedInStateTypeId, false);
+        charger->setStateValue(wallboxRfidChargingStateTypeId, false);
+        charger->setStateValue(wallboxRfidCurrentPowerStateTypeId, 0);
+        charger->setStateValue(wallboxRfidSessionEnergyStateTypeId, 0);
+        charger->setStateValue(wallboxRfidAuthorizedUserStateTypeId, QString());
+        charger->setStateValue(wallboxRfidAuthorizedTagStateTypeId, QString());
         clearWallboxPhaseMeasurements(charger);
     } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
         charger->setStateValue(wallboxNoMeterPluggedInStateTypeId, false);
@@ -1426,6 +1534,9 @@ uint IntegrationPluginEnergySimulation::effectiveAcPhaseCount(Thing *charger, Th
     if (charger->thingClassId() == wallboxThingClassId) {
         desiredPhaseCount = charger->stateValue(wallboxDesiredPhaseCountStateTypeId).toUInt();
         connectedPhaseCount = charger->setting(wallboxSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
+    } else if (charger->thingClassId() == wallboxRfidThingClassId) {
+        desiredPhaseCount = charger->stateValue(wallboxRfidDesiredPhaseCountStateTypeId).toUInt();
+        connectedPhaseCount = charger->setting(wallboxRfidSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
     } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
         desiredPhaseCount = charger->stateValue(wallboxNoMeterDesiredPhaseCountStateTypeId).toUInt();
         connectedPhaseCount = charger->setting(wallboxNoMeterSettingsPhaseParamTypeId).toString() == "All" ? 3 : 1;
@@ -1459,7 +1570,7 @@ QString IntegrationPluginEnergySimulation::acPhaseConnection(Thing *charger, uin
 
 void IntegrationPluginEnergySimulation::setWallboxPhaseMeasurements(Thing *charger, double power, const QString &phaseConnection, double consumedEnergy)
 {
-    if (!charger || charger->thingClassId() != wallboxThingClassId) {
+    if (!charger || (charger->thingClassId() != wallboxThingClassId && charger->thingClassId() != wallboxRfidThingClassId)) {
         return;
     }
 
@@ -1485,7 +1596,7 @@ void IntegrationPluginEnergySimulation::setWallboxPhaseMeasurements(Thing *charg
 
 void IntegrationPluginEnergySimulation::clearWallboxPhaseMeasurements(Thing *charger)
 {
-    if (!charger || charger->thingClassId() != wallboxThingClassId) {
+    if (!charger || (charger->thingClassId() != wallboxThingClassId && charger->thingClassId() != wallboxRfidThingClassId)) {
         return;
     }
 
@@ -1515,6 +1626,8 @@ void IntegrationPluginEnergySimulation::schedulePhaseSwitchIfCharging(Thing *cha
         currentDesiredPhaseCount = charger->stateValue(wallboxDesiredPhaseCountStateTypeId).toUInt();
     } else if (charger->thingClassId() == wallboxNoMeterThingClassId) {
         currentDesiredPhaseCount = charger->stateValue(wallboxNoMeterDesiredPhaseCountStateTypeId).toUInt();
+    } else if (charger->thingClassId() == wallboxRfidThingClassId) {
+        currentDesiredPhaseCount = charger->stateValue(wallboxRfidDesiredPhaseCountStateTypeId).toUInt();
     }
 
     if (currentDesiredPhaseCount == desiredPhaseCount) {
@@ -1540,6 +1653,8 @@ void IntegrationPluginEnergySimulation::schedulePhaseSwitchIfCharging(Thing *cha
     bool charging = charger->stateValue(wallboxNoMeterChargingStateTypeId).toBool();
     if (charger->thingClassId() == wallboxThingClassId) {
         charging = charger->stateValue(wallboxChargingStateTypeId).toBool();
+    } else if (charger->thingClassId() == wallboxRfidThingClassId) {
+        charging = charger->stateValue(wallboxRfidChargingStateTypeId).toBool();
     }
 
     if (pendingPhaseSwitch || charging) {
