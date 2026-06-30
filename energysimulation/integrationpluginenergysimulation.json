@@ -21,15 +21,28 @@
                     "name": "wallbox",
                     "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["evchargerac", "smartmeterconsumer", "connectable"],
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "evchargerac",
+                        "energymeter",
+                        "smartmeterconsumer",
+                        "connectable"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "73df6376-2495-4d61-a832-6de922528c6a",
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         },
                         {
@@ -88,6 +101,134 @@
                             "defaultValue": 0
                         },
                         {
+                            "id": "9d70825a-75be-4683-91d6-6639df0aca2c",
+                            "name": "totalEnergyProduced",
+                            "displayName": "Total produced energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "71b49dd0-a8ca-458e-9837-923e1f70cad4",
+                            "name": "energyConsumedPhaseA",
+                            "displayName": "Consumed energy (Phase A)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "8bef9eea-d649-41f0-8881-3269a4fd0cb3",
+                            "name": "energyConsumedPhaseB",
+                            "displayName": "Consumed energy (Phase B)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "6a6c4637-233d-4617-be62-e5eb1e3766c0",
+                            "name": "energyConsumedPhaseC",
+                            "displayName": "Consumed energy (Phase C)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "4bd89d9d-d1bf-4fcb-8db1-e56c189c8f36",
+                            "name": "energyProducedPhaseA",
+                            "displayName": "Produced energy (Phase A)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "181948c1-70be-4cb4-88b4-a616fff333e4",
+                            "name": "energyProducedPhaseB",
+                            "displayName": "Produced energy (Phase B)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "be774f93-4270-4380-b468-91a942dd9579",
+                            "name": "energyProducedPhaseC",
+                            "displayName": "Produced energy (Phase C)",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "d0979440-b4e7-4303-9133-3597eff7a2af",
+                            "name": "currentPowerPhaseA",
+                            "displayName": "Current power usage (Phase A)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "6b8319e5-6250-400f-aff5-0bb083fc6aa5",
+                            "name": "currentPowerPhaseB",
+                            "displayName": "Current power usage (Phase B)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "20e41456-3b26-4431-9d4e-594e16f0a089",
+                            "name": "currentPowerPhaseC",
+                            "displayName": "Current power usage (Phase C)",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "49411f9f-1481-4a2a-bb84-468a8307df96",
+                            "name": "currentPhaseA",
+                            "displayName": "Current (Phase A)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "f3a2b1a3-ace0-4064-9f58-42ad2f2a69b2",
+                            "name": "currentPhaseB",
+                            "displayName": "Current (Phase B)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "b0fb7e9c-4da5-49c2-896f-f075d0a5750d",
+                            "name": "currentPhaseC",
+                            "displayName": "Current (Phase C)",
+                            "type": "double",
+                            "unit": "Ampere",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "3068da6f-7ef8-4b3b-a837-8ce9dab8a459",
+                            "name": "voltagePhaseA",
+                            "displayName": "Voltage (Phase A)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "bd8c221e-04c8-4493-9205-988e7befc18d",
+                            "name": "voltagePhaseB",
+                            "displayName": "Voltage (Phase B)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "06dd68b0-31eb-4106-8b99-c50c804369c9",
+                            "name": "voltagePhaseC",
+                            "displayName": "Voltage (Phase C)",
+                            "type": "double",
+                            "unit": "Volt",
+                            "defaultValue": 0
+                        },
+                        {
                             "id": "ef839e7e-c2ef-4b2e-b360-2494b7ecabc1",
                             "name": "pluggedIn",
                             "displayName": "Car is plugged in",
@@ -120,7 +261,10 @@
                             "type": "uint",
                             "minValue": 1,
                             "maxValue": 3,
-                            "possibleValues": [1, 3],
+                            "possibleValues": [
+                                1,
+                                3
+                            ],
                             "defaultValue": 3,
                             "writable": true
                         },
@@ -131,6 +275,13 @@
                             "type": "double",
                             "unit": "KiloWattHour",
                             "defaultValue": 0
+                        },
+                        {
+                            "id": "531838d7-02a2-4d7f-a524-5a18fea00d07",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
                         }
                     ],
                     "actionTypes": [
@@ -143,6 +294,24 @@
                             "id": "3bd40690-f726-47c7-b52b-779d1d8933f3",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
+                        },
+                        {
+                            "id": "0e706b67-69fb-40ca-9a3b-72d16c8b2ea2",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "4b68893b-3d4a-4fd7-af38-d208d628ef09",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "b8bdd44c-c1cd-40e6-ad48-24be7a4084c5",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
                         }
                     ]
                 },
@@ -150,15 +319,26 @@
                     "name": "wallboxNoMeter",
                     "displayName": "Simulated wallbox (no meter)",
                     "id": "d26123e6-71f4-4cfe-bc61-5709be2293f0",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["evchargerac", "connectable"],
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "evchargerac",
+                        "connectable"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "70b0efec-c12e-426f-98f8-0aa22c84380b",
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         },
                         {
@@ -233,9 +413,19 @@
                             "type": "uint",
                             "minValue": 1,
                             "maxValue": 3,
-                            "possibleValues": [1, 3],
+                            "possibleValues": [
+                                1,
+                                3
+                            ],
                             "defaultValue": 3,
                             "writable": true
+                        },
+                        {
+                            "id": "e6e991ea-7bec-4f7f-a443-2aeeaf603e72",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
                         }
                     ],
                     "actionTypes": [
@@ -248,6 +438,24 @@
                             "id": "ef413aed-c15b-434b-afd4-f85a26a8a62b",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
+                        },
+                        {
+                            "id": "6e80d527-cb09-4eab-93b4-87d0242b3aa2",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "42bbea6c-7895-4221-a21f-639f338eebb5",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "be78d9a5-59b2-4239-ab31-b30b076b93b4",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
                         }
                     ]
                 },
@@ -255,15 +463,27 @@
                     "name": "dcCharger",
                     "displayName": "Simulated DC charger",
                     "id": "5f8d8038-c3fa-4de3-a7bd-c13ea0e1530e",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["evchargerdc", "smartmeterconsumer", "connectable"],
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "evchargerdc",
+                        "smartmeterconsumer",
+                        "connectable"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "4d33d2e8-caa8-49db-84b4-3bc055f8e2fc",
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         }
                     ],
@@ -323,7 +543,11 @@
                             "name": "chargingCapabilities",
                             "displayName": "Charging capabilities",
                             "type": "QString",
-                            "possibleValues": ["charging", "discharging", "bidirectional"],
+                            "possibleValues": [
+                                "charging",
+                                "discharging",
+                                "bidirectional"
+                            ],
                             "defaultValue": "charging"
                         },
                         {
@@ -386,15 +610,28 @@
                     "name": "hlcDcCharger",
                     "displayName": "Simulated HLC DC charger",
                     "id": "7a6b8fe9-d058-45ca-a1bc-c14115b2d62a",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["evchargerdc", "hlccharger", "smartmeterconsumer", "connectable"],
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "evchargerdc",
+                        "hlccharger",
+                        "smartmeterconsumer",
+                        "connectable"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "f61bd0f3-8ea5-43fd-b0c4-f6f0d36b00c8",
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         }
                     ],
@@ -454,7 +691,11 @@
                             "name": "chargingCapabilities",
                             "displayName": "Charging capabilities",
                             "type": "QString",
-                            "possibleValues": ["charging", "discharging", "bidirectional"],
+                            "possibleValues": [
+                                "charging",
+                                "discharging",
+                                "bidirectional"
+                            ],
                             "defaultValue": "bidirectional"
                         },
                         {
@@ -554,8 +795,13 @@
                     "name": "solarInverter",
                     "displayName": "Simulated solar inverter",
                     "id": "f1e91782-8bc1-4bcb-a07e-e66b01fe7be5",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["solarinverter"],
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "solarinverter"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "73e80177-5a38-4139-957d-97cda3e0fae3",
@@ -570,7 +816,12 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         },
                         {
@@ -583,7 +834,7 @@
                             "defaultValue": 0
                         }
                     ],
-                    "stateTypes":[
+                    "stateTypes": [
                         {
                             "id": "cc290fd9-ce58-410e-9eb4-2e92a1216628",
                             "name": "totalEnergyProduced",
@@ -606,9 +857,14 @@
                     "name": "smartMeter",
                     "displayName": "Simulated smart meter",
                     "id": "d96c77e3-dbf1-4875-95a4-7ca85aa3ef8e",
-                    "createMethods": ["discovery", "user"],
-                    "interfaces": ["energymeter"],
-                    "stateTypes":[
+                    "createMethods": [
+                        "discovery",
+                        "user"
+                    ],
+                    "interfaces": [
+                        "energymeter"
+                    ],
+                    "stateTypes": [
                         {
                             "id": "a0b1e0a3-28cd-4c33-aa77-2a060e27f2f9",
                             "name": "totalEnergyConsumed",
@@ -759,8 +1015,12 @@
                     "id": "51a34654-0e29-45ef-b361-305633838bf2",
                     "name": "stove",
                     "displayName": "Simulated stove",
-                    "createMethods": ["user"],
-                    "interfaces": ["smartmeterconsumer"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "smartmeterconsumer"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "60c12282-95ba-493c-83c2-9e1643a0fe37",
@@ -775,7 +1035,11 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C"
+                            ],
                             "defaultValue": "A"
                         },
                         {
@@ -818,15 +1082,27 @@
                     "id": "bd8271a1-cf21-46fe-9780-f24fdb492e04",
                     "name": "manualConsumer",
                     "displayName": "Simulated consumer",
-                    "createMethods": ["user"],
-                    "interfaces": ["smartmeterconsumer"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "smartmeterconsumer"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "10b224c7-6a53-49b4-8298-a7673fbfaaeb",
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "AB", "AC", "BC", "ABC"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "AB",
+                                "AC",
+                                "BC",
+                                "ABC"
+                            ],
                             "defaultValue": "A"
                         }
                     ],
@@ -855,8 +1131,12 @@
                     "id": "be175640-c2eb-462c-87ec-45d29ec120cd",
                     "name": "fridge",
                     "displayName": "Simulated fridge",
-                    "createMethods": ["user"],
-                    "interfaces": ["smartmeterconsumer"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "smartmeterconsumer"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "b4a04537-f57b-4bc5-89b7-5d67fc5b7f29",
@@ -871,7 +1151,11 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C"
+                            ],
                             "defaultValue": "A"
                         }
                     ],
@@ -898,8 +1182,12 @@
                     "id": "23617f91-b2e4-42f8-90a7-92188415d3d4",
                     "name": "apiCar",
                     "displayName": "Simulated car (with API)",
-                    "createMethods": ["user"],
-                    "interfaces": ["electricvehicle"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "electricvehicle"
+                    ],
                     "stateTypes": [
                         {
                             "id": "59f7be2e-f63d-4f23-a2b5-f045c1b39aab",
@@ -931,7 +1219,11 @@
                             "name": "chargingState",
                             "displayName": "Charging state",
                             "type": "QString",
-                            "possibleValues": ["idle", "charging", "discharging"],
+                            "possibleValues": [
+                                "idle",
+                                "charging",
+                                "discharging"
+                            ],
                             "defaultValue": "idle"
                         },
                         {
@@ -939,7 +1231,11 @@
                             "name": "chargingInterfaces",
                             "displayName": "Charging interfaces",
                             "type": "QString",
-                            "possibleValues": ["ac", "dc", "acdc"],
+                            "possibleValues": [
+                                "ac",
+                                "dc",
+                                "acdc"
+                            ],
                             "defaultValue": "ac"
                         },
                         {
@@ -986,8 +1282,12 @@
                     "id": "4afcafb1-d341-4532-8062-738cae529cb5",
                     "name": "genericCar",
                     "displayName": "Simulated generic car",
-                    "createMethods": ["user"],
-                    "interfaces": ["electricvehicle"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "electricvehicle"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "d63053aa-ac59-4e15-95b5-67ec2c73798d",
@@ -1042,7 +1342,11 @@
                             "name": "chargingState",
                             "displayName": "Charging state",
                             "type": "QString",
-                            "possibleValues": ["idle", "charging", "discharging"],
+                            "possibleValues": [
+                                "idle",
+                                "charging",
+                                "discharging"
+                            ],
                             "defaultValue": "idle"
                         },
                         {
@@ -1050,7 +1354,11 @@
                             "name": "chargingInterfaces",
                             "displayName": "Charging interfaces",
                             "type": "QString",
-                            "possibleValues": ["ac", "dc", "acdc"],
+                            "possibleValues": [
+                                "ac",
+                                "dc",
+                                "acdc"
+                            ],
                             "defaultValue": "ac"
                         },
                         {
@@ -1109,8 +1417,12 @@
                     "id": "ec510772-af55-4e03-9a1f-f7d2ffad1505",
                     "name": "dcVehicle",
                     "displayName": "Simulated DC vehicle",
-                    "createMethods": ["user"],
-                    "interfaces": ["electricvehicle"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "electricvehicle"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "548ea7df-8b5c-4303-b824-9efde80c968d",
@@ -1164,7 +1476,11 @@
                             "name": "chargingState",
                             "displayName": "Charging state",
                             "type": "QString",
-                            "possibleValues": ["idle", "charging", "discharging"],
+                            "possibleValues": [
+                                "idle",
+                                "charging",
+                                "discharging"
+                            ],
                             "defaultValue": "idle"
                         },
                         {
@@ -1172,7 +1488,11 @@
                             "name": "chargingInterfaces",
                             "displayName": "Charging interfaces",
                             "type": "QString",
-                            "possibleValues": ["ac", "dc", "acdc"],
+                            "possibleValues": [
+                                "ac",
+                                "dc",
+                                "acdc"
+                            ],
                             "defaultValue": "dc"
                         },
                         {
@@ -1196,8 +1516,13 @@
                     "id": "9f01e133-0b01-4fc1-8c7f-dc2168f43434",
                     "name": "hlcVehicle",
                     "displayName": "Simulated HLC DC vehicle",
-                    "createMethods": ["user", "auto"],
-                    "interfaces": ["electricvehiclehlc"],
+                    "createMethods": [
+                        "user",
+                        "auto"
+                    ],
+                    "interfaces": [
+                        "electricvehiclehlc"
+                    ],
                     "paramTypes": [
                         {
                             "id": "0652e4dc-a028-4af4-ba78-2585fa1b5574",
@@ -1245,7 +1570,11 @@
                             "name": "chargingState",
                             "displayName": "Charging state",
                             "type": "QString",
-                            "possibleValues": ["idle", "charging", "discharging"],
+                            "possibleValues": [
+                                "idle",
+                                "charging",
+                                "discharging"
+                            ],
                             "defaultValue": "idle"
                         },
                         {
@@ -1253,7 +1582,11 @@
                             "name": "chargingInterfaces",
                             "displayName": "Charging interfaces",
                             "type": "QString",
-                            "possibleValues": ["ac", "dc", "acdc"],
+                            "possibleValues": [
+                                "ac",
+                                "dc",
+                                "acdc"
+                            ],
                             "defaultValue": "dc"
                         },
                         {
@@ -1283,8 +1616,12 @@
                     "id": "d691ccc4-acf7-428f-b6b2-30f36be10c7a",
                     "name": "battery",
                     "displayName": "Simulated battery",
-                    "createMethods": ["user"],
-                    "interfaces": ["energystorage"],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "energystorage"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "4cf4f5b5-1602-4612-8f59-23ceff14c296",
@@ -1307,7 +1644,11 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C"
+                            ],
                             "defaultValue": "A"
                         }
                     ],
@@ -1342,7 +1683,11 @@
                             "name": "chargingState",
                             "displayName": "Charging state",
                             "type": "QString",
-                            "possibleValues": ["idle", "charging", "discharging"],
+                            "possibleValues": [
+                                "idle",
+                                "charging",
+                                "discharging"
+                            ],
                             "defaultValue": "idle"
                         },
                         {
@@ -1359,8 +1704,13 @@
                     "id": "e413a8a8-ab95-408b-998e-8a0d24602037",
                     "name": "sgReadyHeatPump",
                     "displayName": "Simulated heat pump (SG Ready)",
-                    "createMethods": ["user"],
-                    "interfaces": [ "smartgridheatpump", "smartmeterconsumer" ],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "smartgridheatpump",
+                        "smartmeterconsumer"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "f9674cd1-a019-4e0b-81c3-3c01bff427cf",
@@ -1383,7 +1733,12 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         }
                     ],
@@ -1428,8 +1783,13 @@
                     "id": "87850b78-db40-44c8-948c-363c0f85cd7c",
                     "name": "simpleHeatPump",
                     "displayName": "Simulated heat pump (simple)",
-                    "createMethods": ["user"],
-                    "interfaces": [ "simpleheatpump", "smartmeterconsumer" ],
+                    "createMethods": [
+                        "user"
+                    ],
+                    "interfaces": [
+                        "simpleheatpump",
+                        "smartmeterconsumer"
+                    ],
                     "settingsTypes": [
                         {
                             "id": "4967f3e3-1286-4a53-a3da-e36a2dbecb83",
@@ -1452,7 +1812,12 @@
                             "name": "phase",
                             "displayName": "Connected on phase",
                             "type": "QString",
-                            "allowedValues": ["A", "B", "C", "All"],
+                            "allowedValues": [
+                                "A",
+                                "B",
+                                "C",
+                                "All"
+                            ],
                             "defaultValue": "All"
                         }
                     ],

@@ -53,6 +53,7 @@ private:
     QString generateRandomMacAddress() const;
     Thing *findFreeHlcVehicle() const;
     Thing *findFreeDcVehicle() const;
+    Thing *findFreeAcVehicle() const;
     Thing *findFreeAcCharger() const;
     ThingDescriptor createHlcVehicleDescriptor() const;
     Thing *resolveConnectedVehicle(Thing *charger) const;
@@ -63,6 +64,12 @@ private:
     void syncVehicleCapacityState(Thing *vehicle);
     void syncVehicleBatteryState(Thing *vehicle);
     QStringList phasesForConnection(const QString &phase) const;
+    uint effectiveAcPhaseCount(Thing *charger, Thing *vehicle) const;
+    QString acPhaseConnection(Thing *charger, uint phaseCount) const;
+    void setWallboxPhaseMeasurements(Thing *charger, double power, const QString &phaseConnection, double consumedEnergy);
+    void clearWallboxPhaseMeasurements(Thing *charger);
+    void schedulePhaseSwitchIfCharging(Thing *charger, uint desiredPhaseCount);
+    bool consumePendingPhaseSwitch(Thing *charger, Thing *vehicle, const QDateTime &now);
     void addPowerToPhaseTotals(QHash<QString, double> &phaseTotals, const QString &phase, double power) const;
     QPair<QDateTime, QDateTime> calculateSunriseSunset(qreal latitude, qreal longitude, const QDateTime &dateTime);
 
