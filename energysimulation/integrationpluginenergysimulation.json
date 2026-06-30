@@ -22,7 +22,7 @@
                     "displayName": "Simulated wallbox",
                     "id": "21a48e6d-6152-407a-a303-3b46e29bbb94",
                     "createMethods": ["discovery", "user"],
-                    "interfaces": ["evcharger", "smartmeterconsumer", "connectable"],
+                    "interfaces": ["evchargerac", "smartmeterconsumer", "connectable"],
                     "settingsTypes": [
                         {
                             "id": "73df6376-2495-4d61-a832-6de922528c6a",
@@ -151,7 +151,7 @@
                     "displayName": "Simulated wallbox (no meter)",
                     "id": "d26123e6-71f4-4cfe-bc61-5709be2293f0",
                     "createMethods": ["discovery", "user"],
-                    "interfaces": ["evcharger", "connectable"],
+                    "interfaces": ["evchargerac", "connectable"],
                     "settingsTypes": [
                         {
                             "id": "70b0efec-c12e-426f-98f8-0aa22c84380b",
@@ -248,6 +248,305 @@
                             "id": "ef413aed-c15b-434b-afd4-f85a26a8a62b",
                             "name": "disconnect",
                             "displayName": "Disconnect wallbox"
+                        }
+                    ]
+                },
+                {
+                    "name": "dcCharger",
+                    "displayName": "Simulated DC charger",
+                    "id": "5f8d8038-c3fa-4de3-a7bd-c13ea0e1530e",
+                    "createMethods": ["discovery", "user"],
+                    "interfaces": ["evchargerdc", "smartmeterconsumer", "connectable"],
+                    "settingsTypes": [
+                        {
+                            "id": "4d33d2e8-caa8-49db-84b4-3bc055f8e2fc",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "7b06ee2b-7c44-49a2-935c-7b3d38626b4c",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
+                        {
+                            "id": "3947dd17-af5e-4abd-a45f-d9ec77a7b372",
+                            "name": "power",
+                            "displayName": "Charging enabled",
+                            "displayNameAction": "Enable/disable charging",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "writable": true
+                        },
+                        {
+                            "id": "71c1a595-e78f-44a2-98f8-8602a64d50ef",
+                            "name": "currentPower",
+                            "displayName": "Current power consumption",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "5d517bf0-b4db-44d3-b84f-b29cd29e2f2c",
+                            "name": "pluggedIn",
+                            "displayName": "Vehicle is plugged in",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "5d750771-8d53-4db4-a586-c044f1c4f649",
+                            "name": "chargingPower",
+                            "displayName": "Charging power setpoint",
+                            "displayNameAction": "Set charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "writable": true
+                        },
+                        {
+                            "id": "6965fa97-98e1-4ea7-b63b-745519b591df",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "6ca1699d-e4d8-4268-b3f9-e583dc95a7f7",
+                            "name": "chargingCapabilities",
+                            "displayName": "Charging capabilities",
+                            "type": "QString",
+                            "possibleValues": ["charging", "discharging", "bidirectional"],
+                            "defaultValue": "charging"
+                        },
+                        {
+                            "id": "907f4ed4-aa4b-4734-a070-fdf49bdce903",
+                            "name": "maxChargingPower",
+                            "displayName": "Maximum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 11000
+                        },
+                        {
+                            "id": "d4c98bfd-c9e9-4981-9697-7102c230e4af",
+                            "name": "minChargingPower",
+                            "displayName": "Minimum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "5b18d457-b609-438a-b2a7-f3f332eb3077",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "d11152b3-c172-456a-a8fa-0d13d48a4f69",
+                            "name": "connect",
+                            "displayName": "Connect DC charger"
+                        },
+                        {
+                            "id": "29ca0eb3-2e11-42b5-8f18-e2581bc7c935",
+                            "name": "disconnect",
+                            "displayName": "Disconnect DC charger"
+                        },
+                        {
+                            "id": "bcf97cbb-3f9d-42e4-a51b-9b81e7b636f6",
+                            "name": "connectVehicle",
+                            "displayName": "Connect vehicle",
+                            "paramTypes": [
+                                {
+                                    "id": "1f445b35-7991-46f4-a534-f64db316a36e",
+                                    "name": "thingId",
+                                    "displayName": "Vehicle thing ID",
+                                    "type": "QString"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "aa7cf52c-c1c3-45ec-b7f5-b99ab77f645f",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
+                        }
+                    ]
+                },
+                {
+                    "name": "hlcDcCharger",
+                    "displayName": "Simulated HLC DC charger",
+                    "id": "7a6b8fe9-d058-45ca-a1bc-c14115b2d62a",
+                    "createMethods": ["discovery", "user"],
+                    "interfaces": ["evchargerdc", "hlccharger", "smartmeterconsumer", "connectable"],
+                    "settingsTypes": [
+                        {
+                            "id": "f61bd0f3-8ea5-43fd-b0c4-f6f0d36b00c8",
+                            "name": "phase",
+                            "displayName": "Connected on phase",
+                            "type": "QString",
+                            "allowedValues": ["A", "B", "C", "All"],
+                            "defaultValue": "All"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "7226d21b-a688-458e-baf7-b63d49c04d16",
+                            "name": "connected",
+                            "displayName": "Connected",
+                            "type": "bool",
+                            "defaultValue": true
+                        },
+                        {
+                            "id": "86f6aad0-a345-4638-b96d-dfac5dc7b63b",
+                            "name": "power",
+                            "displayName": "Charging enabled",
+                            "displayNameAction": "Enable/disable charging",
+                            "type": "bool",
+                            "defaultValue": true,
+                            "writable": true
+                        },
+                        {
+                            "id": "e58d6d44-a7c4-44d7-9575-025f97378913",
+                            "name": "currentPower",
+                            "displayName": "Current power flow",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "b6e93505-1f5c-4a80-833c-2200345f7a67",
+                            "name": "pluggedIn",
+                            "displayName": "Vehicle is plugged in",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "2548b043-d56f-461b-9755-199694c3ff8d",
+                            "name": "charging",
+                            "displayName": "Charging",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "68cc0e48-3ef8-4609-ae29-f745415f87d6",
+                            "name": "chargingPower",
+                            "displayName": "Charging power setpoint",
+                            "displayNameAction": "Set charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 0,
+                            "writable": true
+                        },
+                        {
+                            "id": "41aa2b53-177c-4a0c-bfd3-26e3a0f3614e",
+                            "name": "chargingCapabilities",
+                            "displayName": "Charging capabilities",
+                            "type": "QString",
+                            "possibleValues": ["charging", "discharging", "bidirectional"],
+                            "defaultValue": "bidirectional"
+                        },
+                        {
+                            "id": "5f196412-0f35-4bdb-ba77-2c647f14f50b",
+                            "name": "maxChargingPower",
+                            "displayName": "Maximum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 50000
+                        },
+                        {
+                            "id": "27391361-c3ce-4fb4-9462-e56543c4f915",
+                            "name": "minChargingPower",
+                            "displayName": "Minimum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 100
+                        },
+                        {
+                            "id": "0a7712f5-6274-4ab4-b2e5-8044326ef5b1",
+                            "name": "maxDischargingPower",
+                            "displayName": "Maximum discharging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 50000
+                        },
+                        {
+                            "id": "01c96b78-6f4b-4457-bbcb-fb977be0ad04",
+                            "name": "minDischargingPower",
+                            "displayName": "Minimum discharging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 100
+                        },
+                        {
+                            "id": "fcb85066-9cca-4bcb-b397-60cf1d7b6e77",
+                            "name": "totalEnergyConsumed",
+                            "displayName": "Total consumed energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "ca30cc5a-b9d8-4f7b-b0c7-7c0e6fb0ac40",
+                            "name": "totalEnergyProduced",
+                            "displayName": "Total produced energy",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "91a1b960-c9ef-45aa-b53d-56c76ea594e0",
+                            "name": "hlcSessionActive",
+                            "displayName": "HLC session active",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "fa261ce1-f4b6-4cf4-917c-5203ebae26ff",
+                            "name": "vehicleIdentified",
+                            "displayName": "Vehicle identified",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "5d08a516-cf68-4baf-abf9-cad9330ddb6a",
+                            "name": "connectedVehicleThingId",
+                            "displayName": "Connected vehicle thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "actionTypes": [
+                        {
+                            "id": "d4605df7-e470-4974-b0a6-2d46f7bd9ee7",
+                            "name": "connect",
+                            "displayName": "Connect HLC DC charger"
+                        },
+                        {
+                            "id": "50c2f77b-5a9f-4798-ba54-fb1780fd7677",
+                            "name": "disconnect",
+                            "displayName": "Disconnect HLC DC charger"
+                        },
+                        {
+                            "id": "c2d2e3e8-6ab4-49a2-abf1-3ff48bd00c62",
+                            "name": "connectRandomHlcVehicle",
+                            "displayName": "Connect random HLC vehicle"
+                        },
+                        {
+                            "id": "8268ce0d-ddbc-4696-a17b-08e892d690c9",
+                            "name": "disconnectVehicle",
+                            "displayName": "Disconnect vehicle"
                         }
                     ]
                 },
@@ -628,6 +927,29 @@
                             "defaultValue": 0
                         },
                         {
+                            "id": "9566b732-4f61-4344-8b3b-374eedc4d5c0",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "4a70e8d5-cf61-4eb5-b9f1-8be6acb5d7b1",
+                            "name": "chargingInterfaces",
+                            "displayName": "Charging interfaces",
+                            "type": "QString",
+                            "possibleValues": ["ac", "dc", "acdc"],
+                            "defaultValue": "ac"
+                        },
+                        {
+                            "id": "19cce180-caec-4373-b24f-c6234406d2d4",
+                            "name": "connectedChargerThingId",
+                            "displayName": "Connected charger thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        },
+                        {
                             "id": "6a47ad6a-5936-4cd7-9200-cfc31ee556c3",
                             "name": "pluggedIn",
                             "displayName": "Plugged in",
@@ -639,7 +961,7 @@
                         },
                         {
                             "id": "612cf64d-b67f-45c3-8558-b1975419f25f",
-                            "name": "minChargingCurrent",
+                            "name": "acMinChargingCurrent",
                             "displayName": "Minimal charging current",
                             "displayNameAction": "Set minimal charging current",
                             "type": "uint",
@@ -651,7 +973,7 @@
                         },
                         {
                             "id": "3cd39a7b-6b27-4f07-aa08-60f93799763d",
-                            "name": "phaseCount",
+                            "name": "acPhaseCount",
                             "displayName": "Phase count",
                             "type": "uint",
                             "minValue": 1,
@@ -716,6 +1038,29 @@
                             "writable": true
                         },
                         {
+                            "id": "3125292f-d0fb-4e73-a9d1-ab6ae4fdb708",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "02668a8f-52d1-4d05-99aa-e1ea20f16763",
+                            "name": "chargingInterfaces",
+                            "displayName": "Charging interfaces",
+                            "type": "QString",
+                            "possibleValues": ["ac", "dc", "acdc"],
+                            "defaultValue": "ac"
+                        },
+                        {
+                            "id": "f2db6bb0-5dd0-4c3f-a7cd-76495fc24727",
+                            "name": "connectedChargerThingId",
+                            "displayName": "Connected charger thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        },
+                        {
                             "id": "d58f8dc2-a447-4ca0-9074-636a3d61ffdd",
                             "name": "pluggedIn",
                             "displayName": "Plugged in",
@@ -727,7 +1072,7 @@
                         },
                         {
                             "id": "cca1ed26-1e33-44d2-9408-bdc7c7aa2742",
-                            "name": "minChargingCurrent",
+                            "name": "acMinChargingCurrent",
                             "displayName": "Minimal charging current",
                             "displayNameAction": "Set minimal charging current",
                             "type": "uint",
@@ -738,13 +1083,199 @@
                             "writable": true
                         },
                         {
+                            "id": "12f00746-ba31-4366-acfb-4fff1c6ba676",
+                            "name": "acMaxChargingCurrent",
+                            "displayName": "Maximal charging current",
+                            "displayNameAction": "Set maximal charging current",
+                            "type": "uint",
+                            "unit": "Ampere",
+                            "minValue": 16,
+                            "maxValue": 80,
+                            "defaultValue": 80,
+                            "writable": true
+                        },
+                        {
                             "id": "0b43d669-9c0f-448f-8503-02958c6640e1",
-                            "name": "phaseCount",
+                            "name": "acPhaseCount",
                             "displayName": "Phase count",
                             "type": "uint",
                             "minValue": 1,
                             "maxValue": 3,
                             "defaultValue": 3
+                        }
+                    ]
+                },
+                {
+                    "id": "ec510772-af55-4e03-9a1f-f7d2ffad1505",
+                    "name": "dcVehicle",
+                    "displayName": "Simulated DC vehicle",
+                    "createMethods": ["user"],
+                    "interfaces": ["electricvehicle"],
+                    "settingsTypes": [
+                        {
+                            "id": "548ea7df-8b5c-4303-b824-9efde80c968d",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "minValue": 20,
+                            "maxValue": 200,
+                            "defaultValue": 50
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "68d8f3f3-04ea-4dd2-82b7-e3c0f30cdd63",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 50
+                        },
+                        {
+                            "id": "126c13e7-664f-4f6c-b0d5-90211ce7f902",
+                            "name": "dcMaxChargingPower",
+                            "displayName": "Maximum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 50000
+                        },
+                        {
+                            "id": "f50390cb-158c-413b-a53e-0c6e91f9e2e5",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "b085f310-e1a9-4ae2-b25c-233bac5274eb",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "displayNameAction": "Set battery level",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0,
+                            "writable": true
+                        },
+                        {
+                            "id": "f0b2ef7c-bd5a-4c8d-bfb4-9ab4de45f9dc",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "adf6ced3-1d36-491e-af89-d33e18bd6ef2",
+                            "name": "chargingInterfaces",
+                            "displayName": "Charging interfaces",
+                            "type": "QString",
+                            "possibleValues": ["ac", "dc", "acdc"],
+                            "defaultValue": "dc"
+                        },
+                        {
+                            "id": "92e96ca1-b1b9-47ba-80c4-362f0f4f2d5c",
+                            "name": "pluggedIn",
+                            "displayName": "Plugged in",
+                            "type": "bool",
+                            "defaultValue": false,
+                            "cached": false
+                        },
+                        {
+                            "id": "c6178ee1-1a72-4601-a74a-87a77c64132f",
+                            "name": "connectedChargerThingId",
+                            "displayName": "Connected charger thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        }
+                    ]
+                },
+                {
+                    "id": "9f01e133-0b01-4fc1-8c7f-dc2168f43434",
+                    "name": "hlcVehicle",
+                    "displayName": "Simulated HLC DC vehicle",
+                    "createMethods": ["user", "auto"],
+                    "interfaces": ["electricvehiclehlc"],
+                    "paramTypes": [
+                        {
+                            "id": "0652e4dc-a028-4af4-ba78-2585fa1b5574",
+                            "name": "macAddress",
+                            "displayName": "MAC address",
+                            "type": "QString"
+                        }
+                    ],
+                    "stateTypes": [
+                        {
+                            "id": "7a641742-a52f-4845-a28a-8a890c734898",
+                            "name": "batteryLevel",
+                            "displayName": "Battery level",
+                            "type": "int",
+                            "unit": "Percentage",
+                            "minValue": 0,
+                            "maxValue": 100,
+                            "defaultValue": 0
+                        },
+                        {
+                            "id": "0df54f14-108a-45f3-83e6-4813dd7c0b4e",
+                            "name": "batteryCritical",
+                            "displayName": "Battery level critical",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "32d63235-d6fd-4a14-9692-642cab5808e2",
+                            "name": "capacity",
+                            "displayName": "Battery capacity",
+                            "type": "double",
+                            "unit": "KiloWattHour",
+                            "defaultValue": 50
+                        },
+                        {
+                            "id": "06ded580-c5c0-4265-b2da-dfbc76bd88f0",
+                            "name": "dcMaxChargingPower",
+                            "displayName": "Maximum charging power",
+                            "type": "double",
+                            "unit": "Watt",
+                            "defaultValue": 50000
+                        },
+                        {
+                            "id": "30a978e6-9270-4d04-a9f5-00d0131ae318",
+                            "name": "chargingState",
+                            "displayName": "Charging state",
+                            "type": "QString",
+                            "possibleValues": ["idle", "charging", "discharging"],
+                            "defaultValue": "idle"
+                        },
+                        {
+                            "id": "6e738b89-9b5b-4e8f-bba9-53758d06cba9",
+                            "name": "chargingInterfaces",
+                            "displayName": "Charging interfaces",
+                            "type": "QString",
+                            "possibleValues": ["ac", "dc", "acdc"],
+                            "defaultValue": "dc"
+                        },
+                        {
+                            "id": "29781d89-fb49-4cb9-b8fe-74098957efd7",
+                            "name": "pluggedIn",
+                            "displayName": "Plugged in",
+                            "type": "bool",
+                            "defaultValue": false
+                        },
+                        {
+                            "id": "a1220f1d-b4a0-4395-b60a-00db7d8c4541",
+                            "name": "connectedChargerThingId",
+                            "displayName": "Connected charger thing ID",
+                            "type": "QString",
+                            "defaultValue": ""
+                        },
+                        {
+                            "id": "77e1ca51-b0e4-4d6c-8a28-ef1f1c1db96b",
+                            "name": "hlcSessionActive",
+                            "displayName": "HLC session active",
+                            "type": "bool",
+                            "defaultValue": false
                         }
                     ]
                 },
