@@ -239,23 +239,17 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
     }
 
     if (thing->thingClassId() == wallboxThingClassId || thing->thingClassId() == wallboxRfidThingClassId) {
+        // pluggedIn, connectedVehicleThingId, session and authorization states are
+        // persisted by core and must survive a daemon restart; the simulation loop
+        // re-resolves the vehicle from the connectedVehicleThingId state and recomputes
+        // charging/currentPower. Fresh things start at the identical JSON defaults.
         thing->setProperty(connectedVehiclePropertyName, QString());
         thing->setProperty(legacyConnectedCarPropertyName, QUuid());
-        thing->setStateValue("pluggedIn", false);
-        thing->setStateValue("charging", false);
-        thing->setStateValue("currentPower", 0);
-        thing->setStateValue("sessionEnergy", 0);
-        thing->setStateValue("totalEnergyProduced", 0);
-        clearWallboxPhaseMeasurements(thing);
-        thing->setStateValue("connectedVehicleThingId", "");
         thing->setProperty(pendingPhaseSwitchPropertyName, false);
         if (thing->thingClassId() == wallboxThingClassId) {
             thing->setStateMaxValue(wallboxMaxChargingCurrentStateTypeId, thing->setting(wallboxSettingsMaxChargingCurrentUpperLimitParamTypeId));
         } else {
             thing->setStateMaxValue(wallboxRfidMaxChargingCurrentStateTypeId, thing->setting(wallboxRfidSettingsMaxChargingCurrentUpperLimitParamTypeId));
-            thing->setStateValue(wallboxRfidAuthorizedUsernameStateTypeId, QString());
-            thing->setStateValue(wallboxRfidAuthorizedDisplayNameStateTypeId, QString());
-            thing->setStateValue(wallboxRfidAuthorizedTagHashStateTypeId, QString());
         }
 
         connect(info->thing(), &Thing::settingChanged, this, [this, thing](const ParamTypeId &settingTypeId, const QVariant &value){
@@ -324,11 +318,10 @@ void IntegrationPluginEnergySimulation::setupThing(ThingSetupInfo *info)
         syncVehicleBatteryState(thing);
 
         if (thing->thingClassId() == apiCarThingClassId || thing->thingClassId() == genericCarThingClassId) {
-            thing->setStateValue("pluggedIn", false);
+            // pluggedIn and connectedChargerThingId are persisted so a plugged car
+            // survives a daemon restart together with its charger; the charging state
+            // is recomputed by the simulation loop.
             setVehicleChargingState(thing, "idle");
-            if (thing->hasState("connectedChargerThingId")) {
-                thing->setStateValue("connectedChargerThingId", "");
-            }
             thing->setProperty(lastEnergyUpdatePropertyName, QDateTime::currentDateTime());
         }
 
