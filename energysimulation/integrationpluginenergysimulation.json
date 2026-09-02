@@ -234,7 +234,7 @@
                             "displayName": "Car is plugged in",
                             "type": "bool",
                             "defaultValue": false,
-                            "cached": false
+                            "cached": true
                         },
                         {
                             "id": "8a3b2acb-7665-4050-a039-f67a2ba3100f",
@@ -533,7 +533,7 @@
                             "displayName": "Car is plugged in",
                             "type": "bool",
                             "defaultValue": false,
-                            "cached": false
+                            "cached": true
                         },
                         {
                             "id": "5c85a546-06fd-4dfa-ab37-56c9f27d8523",
@@ -1611,7 +1611,7 @@
                             "type": "bool",
                             "defaultValue": false,
                             "writable": true,
-                            "cached": false
+                            "cached": true
                         },
                         {
                             "id": "612cf64d-b67f-45c3-8558-b1975419f25f",
@@ -1734,7 +1734,7 @@
                             "type": "bool",
                             "defaultValue": false,
                             "writable": true,
-                            "cached": false
+                            "cached": true
                         },
                         {
                             "id": "cca1ed26-1e33-44d2-9408-bdc7c7aa2742",
