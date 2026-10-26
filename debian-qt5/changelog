@@ -1,3 +1,10 @@
+nymea-plugins-simulation (1.17.0) resolute; urgency=medium
+
+  [ Simon Stürz ]
+  * Add RFID wallbox simulation
+
+ -- jenkins <developer@nymea.io>  Mon, 26 Oct 2026 17:12:43 +0100
+
 nymea-plugins-simulation (1.16.2) resolute; urgency=medium
 
 
